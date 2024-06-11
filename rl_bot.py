@@ -1,9 +1,10 @@
 import random
 from utils import evaluate_hand_strength 
 from player import Player
+import json
 
 class QLearningBot(Player):
-    def __init__(self, name, chips, learning_rate=0.1, discount_factor=1, exploration_rate=0.2):
+    def __init__(self, name, chips, learning_rate=0.1, discount_factor=1, exploration_rate=0.1, q_table_file = None):
         super().__init__(name, chips)
         self.initial_chips = chips
         self.q_table = {}  # State-action value table
@@ -11,6 +12,16 @@ class QLearningBot(Player):
         self.gamma = discount_factor
         self.epsilon = exploration_rate
         self.states_actions = []
+        
+        if q_table_file:
+            self.load_q_table(q_table_file)
+            
+    def load_q_table(self, q_table_filename):
+        with open(q_table_filename, 'r') as q_table_file:
+            q_table = json.load(q_table_file)
+            self.q_table = {eval(k): v for k, v in q_table.items()}
+        print(f"Q-table loaded from {q_table_filename}")
+        print(len(self.q_table))
 
     def get_state(self, game, current_position):
         """ Convert the game state to a tuple that can be used as a dictionary key. """
@@ -18,11 +29,10 @@ class QLearningBot(Player):
         hand_strength = 0
         for pair in self.states_actions:
             if pair[0][0] == game.stage:
-                hand_strength = pair[0][1]
+                hand_strength = pair[0][2]
         if hand_strength == 0:
             hand_strength = evaluate_hand_strength(game,self,1000)
         past_actions = game.actions
-        
         return (
             game.stage,
             position,
@@ -102,6 +112,6 @@ class QLearningBot(Player):
                 deep_player.chips = 300
                 deep_player.score += 4
                 
-            print(f"{self.name} rebuys for {self.initial_chips} chips.")
+            game.log_message(f"{self.name} rebuys for {self.initial_chips} chips.")
             self.chips = self.initial_chips
             self.score -= 1

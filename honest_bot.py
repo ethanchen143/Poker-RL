@@ -65,6 +65,6 @@ class HonestBot(Player):
                 deep_player.chips = 300
                 deep_player.score += 4
             
-            print(f"{self.name} rebuys for {self.initial_chips} chips.")
+            game.log_message(f"{self.name} rebuys for {self.initial_chips} chips.")
             self.chips = self.initial_chips
             self.score -= 1

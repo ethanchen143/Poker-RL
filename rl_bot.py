@@ -4,24 +4,18 @@ from player import Player
 import json
 
 class QLearningBot(Player):
-    def __init__(self, name, chips, learning_rate=0.1, discount_factor=1, exploration_rate=0.1, q_table_file = None):
+    def __init__(self, name, chips, discount_factor=1, initial_learning_rate=0.1, final_learning_rate=0.5, initial_exploration_rate=0.9, final_exploration_rate=0.1, shared_q_table = {}):
         super().__init__(name, chips)
         self.initial_chips = chips
-        self.q_table = {}  # State-action value table
-        self.alpha = learning_rate
+        self.q_table = shared_q_table  # State-action value table
         self.gamma = discount_factor
-        self.epsilon = exploration_rate
+        self.initial_alpha = initial_learning_rate
+        self.final_alpha = final_learning_rate
+        self.initial_epsilon = initial_exploration_rate
+        self.final_epsilon = final_exploration_rate
+        self.alpha = initial_learning_rate
+        self.epsilon = initial_exploration_rate
         self.states_actions = []
-        
-        if q_table_file:
-            self.load_q_table(q_table_file)
-            
-    def load_q_table(self, q_table_filename):
-        with open(q_table_filename, 'r') as q_table_file:
-            q_table = json.load(q_table_file)
-            self.q_table = {eval(k): v for k, v in q_table.items()}
-        print(f"Q-table loaded from {q_table_filename}")
-        print(len(self.q_table))
 
     def get_state(self, game, current_position):
         """ Convert the game state to a tuple that can be used as a dictionary key. """
@@ -105,13 +99,19 @@ class QLearningBot(Player):
         self.states_actions = []
 
     def check_rebuy(self,game):
-        if self.chips <= 3:
+        if self.chips <= game.big_blind:
             # take chips from the deepest stack
             deep_player = max(game.players, key= lambda x: x.chips)
-            if deep_player.chips > 1500:
-                deep_player.chips = 300
-                deep_player.score += 4
+            if deep_player.chips > 3*self.initial_chips:
+                deep_player.chips = self.initial_chips
+                deep_player.score += 2
                 
             game.log_message(f"{self.name} rebuys for {self.initial_chips} chips.")
             self.chips = self.initial_chips
             self.score -= 1
+            
+    def adjust_learning_rate(self, round_number, total_rounds):
+        self.alpha = self.initial_alpha + (self.final_alpha - self.initial_alpha) * (round_number / total_rounds)
+
+    def adjust_exploration_rate(self, round_number, total_rounds):
+        self.epsilon = self.initial_epsilon - (self.initial_epsilon - self.final_epsilon) * (round_number / total_rounds)

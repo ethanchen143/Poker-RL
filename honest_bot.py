@@ -58,12 +58,12 @@ class HonestBot(Player):
         return action
         
     def check_rebuy(self,game):
-        if self.chips <= 3:
+        if self.chips <= game.big_blind:
             # take chips from the deepest stack
             deep_player = max(game.players, key= lambda x: x.chips)
-            if deep_player.chips > 1500:
-                deep_player.chips = 300
-                deep_player.score += 4
+            if deep_player.chips > 3*self.initial_chips:
+                deep_player.chips = self.initial_chips
+                deep_player.score += 2
             
             game.log_message(f"{self.name} rebuys for {self.initial_chips} chips.")
             self.chips = self.initial_chips

@@ -1,5 +1,6 @@
 from rl_bot import QLearningBot
 from honest_bot import HonestBot
+from random_bot import RandomBot
 from poker_game import PokerGame
 import json
 import matplotlib.pyplot as plt
@@ -16,14 +17,22 @@ def main():
     except:
         print('No starting Q-table.')
 
-    num_rounds = 1000000
+    num_rounds = 1000
 
     # 3 Handed Training
     players = [
-        QLearningBot(name="Bot_Hannah", chips=1000, shared_q_table=shared_q_table),
+        HonestBot(name="Honest_Hannah", chips=1000),
         QLearningBot(name="Bot_Ricky", chips=1000, shared_q_table=shared_q_table),
         QLearningBot(name="Bot_Bob", chips=1000, shared_q_table=shared_q_table),
     ]
+    
+    # 3 Handed Testing
+    # players = [
+    #     HonestBot(name="Honest_Hannah", chips=1000),
+    #     RandomBot(name="Random_Ricky", chips=1000),
+    #     QLearningBot(name="Bot_Bob", chips=1000, shared_q_table=shared_q_table,
+    #                  initial_exploration_rate=0, final_exploration_rate=0, initial_learning_rate=0.2, final_learning_rate=0.2),
+    # ]
     
     # 6 Handed Training
     # players = [
@@ -67,8 +76,8 @@ def visualize_scores(score_log_filename):
         rounds = [i * 10000 for i in range(len(scores))]
         plt.plot(rounds, scores, marker='o', label=player) 
 
-    plt.xlabel('Rounds')
-    plt.ylabel('Chips')
+    plt.xlabel('Round')
+    plt.ylabel('Score')
     plt.title('Player Score Tracker')
     plt.legend()
     plt.grid(True)

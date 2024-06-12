@@ -1,8 +1,7 @@
 from player import Player
-from utils import evaluate_hand_strength
 import random
 
-class HonestBot(Player):
+class RandomBot(Player):
     def __init__(self, name, chips):
         super().__init__(name, chips)
         self.initial_chips = chips
@@ -16,6 +15,9 @@ class HonestBot(Player):
         legal_actions = []
         game.pot = sum(game.pots)
         call_amount = game.current_bet - self.current_bet
+
+        if self.chips <= 0:
+            return ['check']
         
         if self.current_bet < game.current_bet:
             legal_actions.append('fold')
@@ -29,10 +31,10 @@ class HonestBot(Player):
         if self.chips > game.current_bet:
             if game.community_cards:
                 # Post-Flop
-                pot_fraction_raises = ['raise_50', 'raise_100']
+                pot_fraction_raises = ['raise_33', 'raise_66', 'raise_100', 'raise_150']
             else:
                 # Pre-Flop
-                pot_fraction_raises = ['raise_100']
+                pot_fraction_raises = ['raise_100', 'raise_150']
 
             # Calculate the actual raise amounts and filter out invalid ones
             valid_raises = [
@@ -45,42 +47,8 @@ class HonestBot(Player):
         return legal_actions
     
     def get_action(self, game, current_position, effective_stack):
-        legal_actions = self.get_legal_actions(game, effective_stack)
-        rand = random.random()
-        hand_strength = evaluate_hand_strength(game,self,100) #get rough evaluation
-        
-        
-        game.log_message(str(hand_strength))        
-        game.log_message(str(legal_actions))
-        if 'check' in legal_actions and hand_strength < 10:
-            return 'check' #check 50% of the hands
-        
-        if game.stage == 'Pre-Flop' and hand_strength < 10:
-            return 'fold' #check 50% of the hands
-        
-        if game.actions.count('raise') == 1:
-            if hand_strength <= 10:
-                return 'fold'
-            if hand_strength <= 15:
-                return 'call'
-            
-        if game.actions.count('raise') == 2:
-            if hand_strength <= 15:
-                return 'fold'
-            if hand_strength <= 18:
-                return 'call'
-
-        if game.actions.count('raise') == 3:
-            if hand_strength <= 18:
-                return 'fold'
-        
-        # if not enough raise, dont go all in
-        if 'raise_100' in legal_actions and game.actions.count('raise') <= 3:
-            legal_actions = legal_actions[:-1]
-        
-        index = round((hand_strength / 20) * (len(legal_actions) - 1))        
-        action = legal_actions[index]
-        
+        legal_actions = self.get_legal_actions(game, effective_stack)   
+        action = random.choice(legal_actions)
         return action
         
     def check_rebuy(self,game):

@@ -4,7 +4,7 @@ from player import Player
 import json
 
 class QLearningBot(Player):
-    def __init__(self, name, chips, discount_factor=1, initial_learning_rate=0.1, final_learning_rate=0.5, initial_exploration_rate=0.9, final_exploration_rate=0.1, shared_q_table = {}):
+    def __init__(self, name, chips, discount_factor=1, initial_learning_rate=0.1, final_learning_rate=0.5, initial_exploration_rate=0.5, final_exploration_rate=0.1, shared_q_table = {}):
         super().__init__(name, chips)
         self.initial_chips = chips
         self.q_table = shared_q_table  # State-action value table
@@ -34,12 +34,15 @@ class QLearningBot(Player):
             tuple(past_actions),
         )
         
-    def choose_action(self, state, legal_actions):
+    def choose_action(self, state, legal_actions, game):
         """ Choose an action based on the Q-Table, with exploration. """
         if random.random() < self.epsilon:
             return random.choice(legal_actions)  # Explore
         else:
             q_values = [self.q_table.get((state, action), 0) for action in legal_actions]
+            game.log_message(str(state[2]))
+            game.log_message(str(legal_actions))
+            game.log_message(str(q_values))
             max_q = max(q_values)
             return legal_actions[q_values.index(max_q)]  # Exploit
     
@@ -68,10 +71,10 @@ class QLearningBot(Player):
         if self.chips > game.current_bet:
             if game.community_cards:
                 # Post-Flop
-                pot_fraction_raises = ['raise_33', 'raise_66', 'raise_100', 'raise_150']
+                pot_fraction_raises = ['raise_50','raise_100']
             else:
                 # Pre-Flop
-                pot_fraction_raises = ['raise_100', 'raise_150']
+                pot_fraction_raises = ['raise_100']
 
             # Calculate the actual raise amounts and filter out invalid ones
             valid_raises = [
@@ -87,14 +90,14 @@ class QLearningBot(Player):
     def get_action(self, game, current_position, effective_stack):
         state = self.get_state(game, current_position)
         legal_actions = self.get_legal_actions(game, effective_stack)
-        action = self.choose_action(state, legal_actions)
+        action = self.choose_action(state, legal_actions, game)
         self.states_actions.append((state,action))
         return action
 
     def receive_reward(self, reward):
         for state, action in self.states_actions:
             old_q_value = self.q_table.get((state, action), 0)
-            new_q_value = old_q_value + self.alpha * (reward - old_q_value)
+            new_q_value = old_q_value + self.alpha * reward
             self.q_table[(state, action)] = new_q_value
         self.states_actions = []
 

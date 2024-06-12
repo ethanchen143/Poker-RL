@@ -1501,12 +1501,12 @@ static const char *__pyx_f[] = {
 /*--- Type declarations ---*/
 struct __pyx_opt_args_21hand_rank_monte_carlo_monte_carlo_simulation;
 
-/* "hand_rank_monte_carlo.pyx":131
+/* "hand_rank_monte_carlo.pyx":73
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):             # <<<<<<<<<<<<<<
  *     setup_module()
- *     srand(time(NULL))
+ *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
  */
 struct __pyx_opt_args_21hand_rank_monte_carlo_monte_carlo_simulation {
   int __pyx_n;
@@ -1864,6 +1864,12 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject *const *kwvalues
         __Pyx__ArgTypeTest(obj, type, name, exact))
 static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
 
+/* ModInt[long].proto */
+static CYTHON_INLINE long __Pyx_mod_long(long, long);
+
+/* DivInt[long].proto */
+static CYTHON_INLINE long __Pyx_div_long(long, long);
+
 /* ListCompAppend.proto */
 #if CYTHON_USE_PYLIST_INTERNALS && CYTHON_ASSUME_SAFE_MACROS
 static CYTHON_INLINE int __Pyx_ListComp_Append(PyObject* list, PyObject* x) {
@@ -1888,17 +1894,51 @@ static CYTHON_INLINE int __Pyx_ListComp_Append(PyObject* list, PyObject* x) {
 /* PyObjectCallOneArg.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
 
+/* PyObjectFormatSimple.proto */
+#if CYTHON_COMPILING_IN_PYPY
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        PyObject_Format(s, f))
+#elif PY_MAJOR_VERSION < 3
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        likely(PyString_CheckExact(s)) ? PyUnicode_FromEncodedObject(s, NULL, "strict") :\
+        PyObject_Format(s, f))
+#elif CYTHON_USE_TYPE_SLOTS
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        likely(PyLong_CheckExact(s)) ? PyLong_Type.tp_repr(s) :\
+        likely(PyFloat_CheckExact(s)) ? PyFloat_Type.tp_repr(s) :\
+        PyObject_Format(s, f))
+#else
+    #define __Pyx_PyObject_FormatSimple(s, f) (\
+        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
+        PyObject_Format(s, f))
+#endif
+
+/* UnicodeConcatInPlace.proto */
+# if CYTHON_COMPILING_IN_CPYTHON && PY_MAJOR_VERSION >= 3
+    #if CYTHON_REFNANNY
+        #define __Pyx_PyUnicode_ConcatInPlace(left, right) __Pyx_PyUnicode_ConcatInPlaceImpl(&left, right, __pyx_refnanny)
+    #else
+        #define __Pyx_PyUnicode_ConcatInPlace(left, right) __Pyx_PyUnicode_ConcatInPlaceImpl(&left, right)
+    #endif
+    static CYTHON_INLINE PyObject *__Pyx_PyUnicode_ConcatInPlaceImpl(PyObject **p_left, PyObject *right
+        #if CYTHON_REFNANNY
+        , void* __pyx_refnanny
+        #endif
+    );
+#else
+#define __Pyx_PyUnicode_ConcatInPlace __Pyx_PyUnicode_Concat
+#endif
+#define __Pyx_PyUnicode_ConcatInPlaceSafe(left, right) ((unlikely((left) == Py_None) || unlikely((right) == Py_None)) ?\
+    PyNumber_InPlaceAdd(left, right) : __Pyx_PyUnicode_ConcatInPlace(left, right))
+
 /* PySequenceContains.proto */
 static CYTHON_INLINE int __Pyx_PySequence_ContainsTF(PyObject* item, PyObject* seq, int eq) {
     int result = PySequence_Contains(seq, item);
     return unlikely(result < 0) ? result : (result == (eq == Py_EQ));
 }
-
-/* ModInt[long].proto */
-static CYTHON_INLINE long __Pyx_mod_long(long, long);
-
-/* DivInt[long].proto */
-static CYTHON_INLINE long __Pyx_div_long(long, long);
 
 /* dict_getitem_default.proto */
 static PyObject* __Pyx_PyDict_GetItemDefault(PyObject* d, PyObject* key, PyObject* default_value);
@@ -2156,11 +2196,11 @@ static CYTHON_INLINE char __Pyx_PyInt_As_char(PyObject *);
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value);
 
-/* CIntToPy.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_From_char(char value);
-
 /* CIntFromPy.proto */
 static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *);
+
+/* CIntToPy.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_char(char value);
 
 /* CIntFromPy.proto */
 static CYTHON_INLINE size_t __Pyx_PyInt_As_size_t(PyObject *);
@@ -2220,9 +2260,8 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 static char __pyx_v_21hand_rank_monte_carlo_SUITS[4];
 static char __pyx_v_21hand_rank_monte_carlo_RANKS[13];
 static PyObject *__pyx_f_21hand_rank_monte_carlo_get_best_hand(PyObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
-static PyObject *__pyx_f_21hand_rank_monte_carlo_single_hand_rank(char (*)[2]); /*proto*/
 static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_21hand_rank_monte_carlo_monte_carlo_simulation *__pyx_optional_args); /*proto*/
-static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*)[2], char (*)[2]); /*proto*/
+static PyObject *__pyx_f_21hand_rank_monte_carlo_single_hand_rank(char (*)[2]); /*proto*/
 static int __pyx_f_21hand_rank_monte_carlo_card_value(char); /*proto*/
 static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *, int); /*proto*/
 static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *, int); /*proto*/
@@ -2239,6 +2278,7 @@ int __pyx_module_is_main_hand_rank_monte_carlo = 0;
 /* Implementation of "hand_rank_monte_carlo" */
 /* #### Code section: global_var ### */
 static PyObject *__pyx_builtin_range;
+static PyObject *__pyx_builtin_chr;
 static PyObject *__pyx_builtin_max;
 static PyObject *__pyx_builtin_sorted;
 /* #### Code section: string_decls ### */
@@ -2261,6 +2301,7 @@ static const char __pyx_k_h[] = "h";
 static const char __pyx_k_s[] = "s";
 static const char __pyx_k__3[] = ".";
 static const char __pyx_k__11[] = "?";
+static const char __pyx_k_chr[] = "chr";
 static const char __pyx_k_get[] = "get";
 static const char __pyx_k_max[] = "max";
 static const char __pyx_k_main[] = "__main__";
@@ -2351,6 +2392,7 @@ typedef struct {
   PyObject *__pyx_kp_u__3;
   PyObject *__pyx_n_s_asyncio_coroutines;
   PyObject *__pyx_n_b_c;
+  PyObject *__pyx_n_s_chr;
   PyObject *__pyx_n_s_cline_in_traceback;
   PyObject *__pyx_n_s_combinations;
   PyObject *__pyx_n_s_community_cards;
@@ -2464,6 +2506,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_u__3);
   Py_CLEAR(clear_module_state->__pyx_n_s_asyncio_coroutines);
   Py_CLEAR(clear_module_state->__pyx_n_b_c);
+  Py_CLEAR(clear_module_state->__pyx_n_s_chr);
   Py_CLEAR(clear_module_state->__pyx_n_s_cline_in_traceback);
   Py_CLEAR(clear_module_state->__pyx_n_s_combinations);
   Py_CLEAR(clear_module_state->__pyx_n_s_community_cards);
@@ -2555,6 +2598,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_u__3);
   Py_VISIT(traverse_module_state->__pyx_n_s_asyncio_coroutines);
   Py_VISIT(traverse_module_state->__pyx_n_b_c);
+  Py_VISIT(traverse_module_state->__pyx_n_s_chr);
   Py_VISIT(traverse_module_state->__pyx_n_s_cline_in_traceback);
   Py_VISIT(traverse_module_state->__pyx_n_s_combinations);
   Py_VISIT(traverse_module_state->__pyx_n_s_community_cards);
@@ -2668,6 +2712,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_u__3 __pyx_mstate_global->__pyx_kp_u__3
 #define __pyx_n_s_asyncio_coroutines __pyx_mstate_global->__pyx_n_s_asyncio_coroutines
 #define __pyx_n_b_c __pyx_mstate_global->__pyx_n_b_c
+#define __pyx_n_s_chr __pyx_mstate_global->__pyx_n_s_chr
 #define __pyx_n_s_cline_in_traceback __pyx_mstate_global->__pyx_n_s_cline_in_traceback
 #define __pyx_n_s_combinations __pyx_mstate_global->__pyx_n_s_combinations
 #define __pyx_n_s_community_cards __pyx_mstate_global->__pyx_n_s_community_cards
@@ -2943,7 +2988,7 @@ static CYTHON_INLINE PyObject *__Pyx_carray_to_tuple_int(int *__pyx_v_v, Py_ssiz
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":13
+/* "hand_rank_monte_carlo.pyx":12
  * cdef char RANKS[13]
  * 
  * def initialize_constants():             # <<<<<<<<<<<<<<
@@ -2976,177 +3021,177 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_initialize_constants(CYTHON_UN
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("initialize_constants", 1);
 
-  /* "hand_rank_monte_carlo.pyx":15
+  /* "hand_rank_monte_carlo.pyx":14
  * def initialize_constants():
  *     global SUITS, RANKS
  *     SUITS[0] = b'h'[0]             # <<<<<<<<<<<<<<
  *     SUITS[1] = b'd'[0]
  *     SUITS[2] = b'c'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_h, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_h, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 14, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_SUITS[0]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":16
+  /* "hand_rank_monte_carlo.pyx":15
  *     global SUITS, RANKS
  *     SUITS[0] = b'h'[0]
  *     SUITS[1] = b'd'[0]             # <<<<<<<<<<<<<<
  *     SUITS[2] = b'c'[0]
  *     SUITS[3] = b's'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_d, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_d, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_SUITS[1]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":17
+  /* "hand_rank_monte_carlo.pyx":16
  *     SUITS[0] = b'h'[0]
  *     SUITS[1] = b'd'[0]
  *     SUITS[2] = b'c'[0]             # <<<<<<<<<<<<<<
  *     SUITS[3] = b's'[0]
  *     RANKS[0] = b'2'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_c, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_c, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 16, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_SUITS[2]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":18
+  /* "hand_rank_monte_carlo.pyx":17
  *     SUITS[1] = b'd'[0]
  *     SUITS[2] = b'c'[0]
  *     SUITS[3] = b's'[0]             # <<<<<<<<<<<<<<
  *     RANKS[0] = b'2'[0]
  *     RANKS[1] = b'3'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_s, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_s, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_SUITS[3]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":19
+  /* "hand_rank_monte_carlo.pyx":18
  *     SUITS[2] = b'c'[0]
  *     SUITS[3] = b's'[0]
  *     RANKS[0] = b'2'[0]             # <<<<<<<<<<<<<<
  *     RANKS[1] = b'3'[0]
  *     RANKS[2] = b'4'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_2, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 19, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_2, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[0]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":20
+  /* "hand_rank_monte_carlo.pyx":19
  *     SUITS[3] = b's'[0]
  *     RANKS[0] = b'2'[0]
  *     RANKS[1] = b'3'[0]             # <<<<<<<<<<<<<<
  *     RANKS[2] = b'4'[0]
  *     RANKS[3] = b'5'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_3, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_3, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 19, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[1]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":21
+  /* "hand_rank_monte_carlo.pyx":20
  *     RANKS[0] = b'2'[0]
  *     RANKS[1] = b'3'[0]
  *     RANKS[2] = b'4'[0]             # <<<<<<<<<<<<<<
  *     RANKS[3] = b'5'[0]
  *     RANKS[4] = b'6'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_4, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 21, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_4, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[2]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":22
+  /* "hand_rank_monte_carlo.pyx":21
  *     RANKS[1] = b'3'[0]
  *     RANKS[2] = b'4'[0]
  *     RANKS[3] = b'5'[0]             # <<<<<<<<<<<<<<
  *     RANKS[4] = b'6'[0]
  *     RANKS[5] = b'7'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_5, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_5, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 21, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[3]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":23
+  /* "hand_rank_monte_carlo.pyx":22
  *     RANKS[2] = b'4'[0]
  *     RANKS[3] = b'5'[0]
  *     RANKS[4] = b'6'[0]             # <<<<<<<<<<<<<<
  *     RANKS[5] = b'7'[0]
  *     RANKS[6] = b'8'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_6, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 23, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_6, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 22, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[4]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":24
+  /* "hand_rank_monte_carlo.pyx":23
  *     RANKS[3] = b'5'[0]
  *     RANKS[4] = b'6'[0]
  *     RANKS[5] = b'7'[0]             # <<<<<<<<<<<<<<
  *     RANKS[6] = b'8'[0]
  *     RANKS[7] = b'9'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_7, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 24, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_7, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 23, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[5]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":25
+  /* "hand_rank_monte_carlo.pyx":24
  *     RANKS[4] = b'6'[0]
  *     RANKS[5] = b'7'[0]
  *     RANKS[6] = b'8'[0]             # <<<<<<<<<<<<<<
  *     RANKS[7] = b'9'[0]
  *     RANKS[8] = b'T'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_8, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_8, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 24, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[6]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":26
+  /* "hand_rank_monte_carlo.pyx":25
  *     RANKS[5] = b'7'[0]
  *     RANKS[6] = b'8'[0]
  *     RANKS[7] = b'9'[0]             # <<<<<<<<<<<<<<
  *     RANKS[8] = b'T'[0]
  *     RANKS[9] = b'J'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_9, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_kp_b_9, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 25, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[7]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":27
+  /* "hand_rank_monte_carlo.pyx":26
  *     RANKS[6] = b'8'[0]
  *     RANKS[7] = b'9'[0]
  *     RANKS[8] = b'T'[0]             # <<<<<<<<<<<<<<
  *     RANKS[9] = b'J'[0]
  *     RANKS[10] = b'Q'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_T, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_T, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 26, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[8]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":28
+  /* "hand_rank_monte_carlo.pyx":27
  *     RANKS[7] = b'9'[0]
  *     RANKS[8] = b'T'[0]
  *     RANKS[9] = b'J'[0]             # <<<<<<<<<<<<<<
  *     RANKS[10] = b'Q'[0]
  *     RANKS[11] = b'K'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_J, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_J, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 27, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[9]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":29
+  /* "hand_rank_monte_carlo.pyx":28
  *     RANKS[8] = b'T'[0]
  *     RANKS[9] = b'J'[0]
  *     RANKS[10] = b'Q'[0]             # <<<<<<<<<<<<<<
  *     RANKS[11] = b'K'[0]
  *     RANKS[12] = b'A'[0]
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_Q, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_Q, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 28, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[10]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":30
+  /* "hand_rank_monte_carlo.pyx":29
  *     RANKS[9] = b'J'[0]
  *     RANKS[10] = b'Q'[0]
  *     RANKS[11] = b'K'[0]             # <<<<<<<<<<<<<<
  *     RANKS[12] = b'A'[0]
  * 
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_K, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_K, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 29, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[11]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":31
+  /* "hand_rank_monte_carlo.pyx":30
  *     RANKS[10] = b'Q'[0]
  *     RANKS[11] = b'K'[0]
  *     RANKS[12] = b'A'[0]             # <<<<<<<<<<<<<<
  * 
  * def setup_module():
  */
-  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_A, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_GetItemInt(__pyx_n_b_A, 0, 1); if (unlikely(__pyx_t_1 == ((char)((char)-1)) && PyErr_Occurred())) __PYX_ERR(0, 30, __pyx_L1_error)
   (__pyx_v_21hand_rank_monte_carlo_RANKS[12]) = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":13
+  /* "hand_rank_monte_carlo.pyx":12
  * cdef char RANKS[13]
  * 
  * def initialize_constants():             # <<<<<<<<<<<<<<
@@ -3166,12 +3211,12 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_initialize_constants(CYTHON_UN
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":33
+/* "hand_rank_monte_carlo.pyx":32
  *     RANKS[12] = b'A'[0]
  * 
  * def setup_module():             # <<<<<<<<<<<<<<
  *     initialize_constants()
- * 
+ *     srand(time(NULL))  # Seed the RNG once
  */
 
 /* Python wrapper */
@@ -3202,14 +3247,14 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_2setup_module(CYTHON_UNUSED Py
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("setup_module", 1);
 
-  /* "hand_rank_monte_carlo.pyx":34
+  /* "hand_rank_monte_carlo.pyx":33
  * 
  * def setup_module():
  *     initialize_constants()             # <<<<<<<<<<<<<<
- * 
+ *     srand(time(NULL))  # Seed the RNG once
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_initialize_constants); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_initialize_constants); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_4 = 0;
@@ -3229,18 +3274,27 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_2setup_module(CYTHON_UNUSED Py
     PyObject *__pyx_callargs[2] = {__pyx_t_3, NULL};
     __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 0+__pyx_t_4);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":33
+  /* "hand_rank_monte_carlo.pyx":34
+ * def setup_module():
+ *     initialize_constants()
+ *     srand(time(NULL))  # Seed the RNG once             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  srand(time(NULL));
+
+  /* "hand_rank_monte_carlo.pyx":32
  *     RANKS[12] = b'A'[0]
  * 
  * def setup_module():             # <<<<<<<<<<<<<<
  *     initialize_constants()
- * 
+ *     srand(time(NULL))  # Seed the RNG once
  */
 
   /* function exit code */
@@ -3738,7 +3792,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_best_hand(PyObject *__pyx_v
  * 
  *     return best_rank             # <<<<<<<<<<<<<<
  * 
- * cdef tuple single_hand_rank(char hand[5][2]):
+ * @cython.boundscheck(False)
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v_best_rank);
@@ -3914,924 +3968,12 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_4get_best_hand(CYTHON_UNUSED P
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":71
- *     return best_rank
- * 
- * cdef tuple single_hand_rank(char hand[5][2]):             # <<<<<<<<<<<<<<
- *     cdef int values[5]
- *     cdef char suits[5]
- */
-
-static PyObject *__pyx_f_21hand_rank_monte_carlo_single_hand_rank(char (*__pyx_v_hand)[2]) {
-  int __pyx_v_values[5];
-  char __pyx_v_suits[5];
-  int __pyx_v_i;
-  int __pyx_v_straight;
-  int __pyx_v_flush;
-  int __pyx_v_val_count[15];
-  int __pyx_v_four_kind;
-  PyObject *__pyx_v_kicker = NULL;
-  int __pyx_v_three_kind;
-  int __pyx_v_pair;
-  PyObject *__pyx_v_pairs = NULL;
-  int __pyx_7genexpr__pyx_v_v;
-  int __pyx_8genexpr1__pyx_v_v;
-  int __pyx_8genexpr2__pyx_v_v;
-  int __pyx_8genexpr3__pyx_v_v;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  int __pyx_t_1;
-  int __pyx_t_2;
-  int __pyx_t_3;
-  PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  PyObject *__pyx_t_6 = NULL;
-  int __pyx_t_7;
-  int *__pyx_t_8;
-  int *__pyx_t_9;
-  int *__pyx_t_10;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("single_hand_rank", 1);
-
-  /* "hand_rank_monte_carlo.pyx":78
- * 
- *     # Initialize val_count to 0
- *     for i in range(15):             # <<<<<<<<<<<<<<
- *         val_count[i] = 0
- * 
- */
-  for (__pyx_t_1 = 0; __pyx_t_1 < 15; __pyx_t_1+=1) {
-    __pyx_v_i = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":79
- *     # Initialize val_count to 0
- *     for i in range(15):
- *         val_count[i] = 0             # <<<<<<<<<<<<<<
- * 
- *     # Populate value and suit arrays
- */
-    (__pyx_v_val_count[__pyx_v_i]) = 0;
-  }
-
-  /* "hand_rank_monte_carlo.pyx":82
- * 
- *     # Populate value and suit arrays
- *     for i in range(5):             # <<<<<<<<<<<<<<
- *         values[i] = card_value(hand[i][1])
- *         suits[i] = hand[i][0]
- */
-  for (__pyx_t_1 = 0; __pyx_t_1 < 5; __pyx_t_1+=1) {
-    __pyx_v_i = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":83
- *     # Populate value and suit arrays
- *     for i in range(5):
- *         values[i] = card_value(hand[i][1])             # <<<<<<<<<<<<<<
- *         suits[i] = hand[i][0]
- *         val_count[values[i]] += 1
- */
-    __pyx_t_2 = __pyx_f_21hand_rank_monte_carlo_card_value(((__pyx_v_hand[__pyx_v_i])[1])); if (unlikely(__pyx_t_2 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 83, __pyx_L1_error)
-    (__pyx_v_values[__pyx_v_i]) = __pyx_t_2;
-
-    /* "hand_rank_monte_carlo.pyx":84
- *     for i in range(5):
- *         values[i] = card_value(hand[i][1])
- *         suits[i] = hand[i][0]             # <<<<<<<<<<<<<<
- *         val_count[values[i]] += 1
- * 
- */
-    (__pyx_v_suits[__pyx_v_i]) = ((__pyx_v_hand[__pyx_v_i])[0]);
-
-    /* "hand_rank_monte_carlo.pyx":85
- *         values[i] = card_value(hand[i][1])
- *         suits[i] = hand[i][0]
- *         val_count[values[i]] += 1             # <<<<<<<<<<<<<<
- * 
- *     # Check for flush
- */
-    __pyx_t_2 = (__pyx_v_values[__pyx_v_i]);
-    (__pyx_v_val_count[__pyx_t_2]) = ((__pyx_v_val_count[__pyx_t_2]) + 1);
-  }
-
-  /* "hand_rank_monte_carlo.pyx":88
- * 
- *     # Check for flush
- *     flush = (suits[0] == suits[1] == suits[2] == suits[3] == suits[4])             # <<<<<<<<<<<<<<
- * 
- *     # Check for straight
- */
-  __pyx_t_3 = ((__pyx_v_suits[0]) == (__pyx_v_suits[1]));
-  if (__pyx_t_3) {
-    __pyx_t_3 = ((__pyx_v_suits[1]) == (__pyx_v_suits[2]));
-    if (__pyx_t_3) {
-      __pyx_t_3 = ((__pyx_v_suits[2]) == (__pyx_v_suits[3]));
-      if (__pyx_t_3) {
-        __pyx_t_3 = ((__pyx_v_suits[3]) == (__pyx_v_suits[4]));
-      }
-    }
-  }
-  __pyx_v_flush = __pyx_t_3;
-
-  /* "hand_rank_monte_carlo.pyx":91
- * 
- *     # Check for straight
- *     values.sort()             # <<<<<<<<<<<<<<
- *     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and
- *                 values[2] + 1 == values[3] and values[3] + 1 == values[4])
- */
-  __pyx_t_5 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 91, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_sort); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 91, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = NULL;
-  __pyx_t_1 = 0;
-  #if CYTHON_UNPACK_METHODS
-  if (likely(PyMethod_Check(__pyx_t_6))) {
-    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_6);
-    if (likely(__pyx_t_5)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
-      __Pyx_INCREF(__pyx_t_5);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_6, function);
-      __pyx_t_1 = 1;
-    }
-  }
-  #endif
-  {
-    PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
-    __pyx_t_4 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_1, 0+__pyx_t_1);
-    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 91, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  }
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-
-  /* "hand_rank_monte_carlo.pyx":92
- *     # Check for straight
- *     values.sort()
- *     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and             # <<<<<<<<<<<<<<
- *                 values[2] + 1 == values[3] and values[3] + 1 == values[4])
- * 
- */
-  __pyx_t_3 = (((__pyx_v_values[0]) + 1) == (__pyx_v_values[1]));
-  if (__pyx_t_3) {
-  } else {
-    __pyx_t_1 = __pyx_t_3;
-    goto __pyx_L7_bool_binop_done;
-  }
-  __pyx_t_3 = (((__pyx_v_values[1]) + 1) == (__pyx_v_values[2]));
-  if (__pyx_t_3) {
-  } else {
-    __pyx_t_1 = __pyx_t_3;
-    goto __pyx_L7_bool_binop_done;
-  }
-
-  /* "hand_rank_monte_carlo.pyx":93
- *     values.sort()
- *     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and
- *                 values[2] + 1 == values[3] and values[3] + 1 == values[4])             # <<<<<<<<<<<<<<
- * 
- *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
- */
-  __pyx_t_3 = (((__pyx_v_values[2]) + 1) == (__pyx_v_values[3]));
-  if (__pyx_t_3) {
-  } else {
-    __pyx_t_1 = __pyx_t_3;
-    goto __pyx_L7_bool_binop_done;
-  }
-  __pyx_t_3 = (((__pyx_v_values[3]) + 1) == (__pyx_v_values[4]));
-  __pyx_t_1 = __pyx_t_3;
-  __pyx_L7_bool_binop_done:;
-  __pyx_v_straight = __pyx_t_1;
-
-  /* "hand_rank_monte_carlo.pyx":96
- * 
- *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
- *     if not straight and values[4] == 14:  # Checking if Ace is high             # <<<<<<<<<<<<<<
- *         straight = (values[0] == 2 and values[1] == 3 and values[2] == 4 and values[3] == 5)
- * 
- */
-  __pyx_t_7 = (!(__pyx_v_straight != 0));
-  if (__pyx_t_7) {
-  } else {
-    __pyx_t_3 = __pyx_t_7;
-    goto __pyx_L12_bool_binop_done;
-  }
-  __pyx_t_7 = ((__pyx_v_values[4]) == 14);
-  __pyx_t_3 = __pyx_t_7;
-  __pyx_L12_bool_binop_done:;
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":97
- *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
- *     if not straight and values[4] == 14:  # Checking if Ace is high
- *         straight = (values[0] == 2 and values[1] == 3 and values[2] == 4 and values[3] == 5)             # <<<<<<<<<<<<<<
- * 
- *     # Determine hand rank
- */
-    __pyx_t_3 = ((__pyx_v_values[0]) == 2);
-    if (__pyx_t_3) {
-    } else {
-      __pyx_t_1 = __pyx_t_3;
-      goto __pyx_L14_bool_binop_done;
-    }
-    __pyx_t_3 = ((__pyx_v_values[1]) == 3);
-    if (__pyx_t_3) {
-    } else {
-      __pyx_t_1 = __pyx_t_3;
-      goto __pyx_L14_bool_binop_done;
-    }
-    __pyx_t_3 = ((__pyx_v_values[2]) == 4);
-    if (__pyx_t_3) {
-    } else {
-      __pyx_t_1 = __pyx_t_3;
-      goto __pyx_L14_bool_binop_done;
-    }
-    __pyx_t_3 = ((__pyx_v_values[3]) == 5);
-    __pyx_t_1 = __pyx_t_3;
-    __pyx_L14_bool_binop_done:;
-    __pyx_v_straight = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":96
- * 
- *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
- *     if not straight and values[4] == 14:  # Checking if Ace is high             # <<<<<<<<<<<<<<
- *         straight = (values[0] == 2 and values[1] == 3 and values[2] == 4 and values[3] == 5)
- * 
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":100
- * 
- *     # Determine hand rank
- *     if straight and flush:             # <<<<<<<<<<<<<<
- *         return (8, tuple(values))  # Straight flush
- *     elif has_n_of_a_kind(val_count, 4):
- */
-  __pyx_t_7 = (__pyx_v_straight != 0);
-  if (__pyx_t_7) {
-  } else {
-    __pyx_t_3 = __pyx_t_7;
-    goto __pyx_L19_bool_binop_done;
-  }
-  __pyx_t_7 = (__pyx_v_flush != 0);
-  __pyx_t_3 = __pyx_t_7;
-  __pyx_L19_bool_binop_done:;
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":101
- *     # Determine hand rank
- *     if straight and flush:
- *         return (8, tuple(values))  # Straight flush             # <<<<<<<<<<<<<<
- *     elif has_n_of_a_kind(val_count, 4):
- *         four_kind = get_n_of_a_kind(val_count, 4)
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_INCREF(__pyx_int_8);
-    __Pyx_GIVEREF(__pyx_int_8);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_8)) __PYX_ERR(0, 101, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error);
-    __pyx_t_6 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_4);
-    __pyx_t_4 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":100
- * 
- *     # Determine hand rank
- *     if straight and flush:             # <<<<<<<<<<<<<<
- *         return (8, tuple(values))  # Straight flush
- *     elif has_n_of_a_kind(val_count, 4):
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":102
- *     if straight and flush:
- *         return (8, tuple(values))  # Straight flush
- *     elif has_n_of_a_kind(val_count, 4):             # <<<<<<<<<<<<<<
- *         four_kind = get_n_of_a_kind(val_count, 4)
- *         kicker = max([v for v in values if v != four_kind])
- */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 4); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L1_error)
-  __pyx_t_3 = (__pyx_t_1 != 0);
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":103
- *         return (8, tuple(values))  # Straight flush
- *     elif has_n_of_a_kind(val_count, 4):
- *         four_kind = get_n_of_a_kind(val_count, 4)             # <<<<<<<<<<<<<<
- *         kicker = max([v for v in values if v != four_kind])
- *         return (7, (four_kind, kicker))  # Four of a kind
- */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 4); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
-    __pyx_v_four_kind = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":104
- *     elif has_n_of_a_kind(val_count, 4):
- *         four_kind = get_n_of_a_kind(val_count, 4)
- *         kicker = max([v for v in values if v != four_kind])             # <<<<<<<<<<<<<<
- *         return (7, (four_kind, kicker))  # Four of a kind
- *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
- */
-    { /* enter inner scope */
-      __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 104, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_9 = (__pyx_v_values + 5);
-      for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
-        __pyx_t_8 = __pyx_t_10;
-        __pyx_7genexpr__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_3 = (__pyx_7genexpr__pyx_v_v != __pyx_v_four_kind);
-        if (__pyx_t_3) {
-          __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_7genexpr__pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 104, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_6);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_4, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 104, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        }
-      }
-    } /* exit inner scope */
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 104, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_v_kicker = __pyx_t_6;
-    __pyx_t_6 = 0;
-
-    /* "hand_rank_monte_carlo.pyx":105
- *         four_kind = get_n_of_a_kind(val_count, 4)
- *         kicker = max([v for v in values if v != four_kind])
- *         return (7, (four_kind, kicker))  # Four of a kind             # <<<<<<<<<<<<<<
- *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
- *         three_kind = get_n_of_a_kind(val_count, 3)
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_four_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 105, __pyx_L1_error);
-    __Pyx_INCREF(__pyx_v_kicker);
-    __Pyx_GIVEREF(__pyx_v_kicker);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_v_kicker)) __PYX_ERR(0, 105, __pyx_L1_error);
-    __pyx_t_6 = 0;
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_INCREF(__pyx_int_7);
-    __Pyx_GIVEREF(__pyx_int_7);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_7)) __PYX_ERR(0, 105, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_4)) __PYX_ERR(0, 105, __pyx_L1_error);
-    __pyx_t_4 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_6);
-    __pyx_t_6 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":102
- *     if straight and flush:
- *         return (8, tuple(values))  # Straight flush
- *     elif has_n_of_a_kind(val_count, 4):             # <<<<<<<<<<<<<<
- *         four_kind = get_n_of_a_kind(val_count, 4)
- *         kicker = max([v for v in values if v != four_kind])
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":106
- *         kicker = max([v for v in values if v != four_kind])
- *         return (7, (four_kind, kicker))  # Four of a kind
- *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         pair = get_n_of_a_kind(val_count, 2)
- */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 106, __pyx_L1_error)
-  __pyx_t_7 = (__pyx_t_1 != 0);
-  if (__pyx_t_7) {
-  } else {
-    __pyx_t_3 = __pyx_t_7;
-    goto __pyx_L24_bool_binop_done;
-  }
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 106, __pyx_L1_error)
-  __pyx_t_7 = (__pyx_t_1 != 0);
-  __pyx_t_3 = __pyx_t_7;
-  __pyx_L24_bool_binop_done:;
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":107
- *         return (7, (four_kind, kicker))  # Four of a kind
- *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
- *         three_kind = get_n_of_a_kind(val_count, 3)             # <<<<<<<<<<<<<<
- *         pair = get_n_of_a_kind(val_count, 2)
- *         return (6, (three_kind, pair))  # Full house
- */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 107, __pyx_L1_error)
-    __pyx_v_three_kind = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":108
- *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         pair = get_n_of_a_kind(val_count, 2)             # <<<<<<<<<<<<<<
- *         return (6, (three_kind, pair))  # Full house
- *     elif flush:
- */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L1_error)
-    __pyx_v_pair = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":109
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         pair = get_n_of_a_kind(val_count, 2)
- *         return (6, (three_kind, pair))  # Full house             # <<<<<<<<<<<<<<
- *     elif flush:
- *         return (5, tuple(values))  # Flush
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_three_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_pair); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6)) __PYX_ERR(0, 109, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 109, __pyx_L1_error);
-    __pyx_t_6 = 0;
-    __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_INCREF(__pyx_int_6);
-    __Pyx_GIVEREF(__pyx_int_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_6)) __PYX_ERR(0, 109, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 109, __pyx_L1_error);
-    __pyx_t_5 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_4);
-    __pyx_t_4 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":106
- *         kicker = max([v for v in values if v != four_kind])
- *         return (7, (four_kind, kicker))  # Four of a kind
- *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         pair = get_n_of_a_kind(val_count, 2)
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":110
- *         pair = get_n_of_a_kind(val_count, 2)
- *         return (6, (three_kind, pair))  # Full house
- *     elif flush:             # <<<<<<<<<<<<<<
- *         return (5, tuple(values))  # Flush
- *     elif straight:
- */
-  __pyx_t_3 = (__pyx_v_flush != 0);
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":111
- *         return (6, (three_kind, pair))  # Full house
- *     elif flush:
- *         return (5, tuple(values))  # Flush             # <<<<<<<<<<<<<<
- *     elif straight:
- *         return (4, tuple(values))  # Straight
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_INCREF(__pyx_int_5);
-    __Pyx_GIVEREF(__pyx_int_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_5)) __PYX_ERR(0, 111, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 111, __pyx_L1_error);
-    __pyx_t_5 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_4);
-    __pyx_t_4 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":110
- *         pair = get_n_of_a_kind(val_count, 2)
- *         return (6, (three_kind, pair))  # Full house
- *     elif flush:             # <<<<<<<<<<<<<<
- *         return (5, tuple(values))  # Flush
- *     elif straight:
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":112
- *     elif flush:
- *         return (5, tuple(values))  # Flush
- *     elif straight:             # <<<<<<<<<<<<<<
- *         return (4, tuple(values))  # Straight
- *     elif has_n_of_a_kind(val_count, 3):
- */
-  __pyx_t_3 = (__pyx_v_straight != 0);
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":113
- *         return (5, tuple(values))  # Flush
- *     elif straight:
- *         return (4, tuple(values))  # Straight             # <<<<<<<<<<<<<<
- *     elif has_n_of_a_kind(val_count, 3):
- *         three_kind = get_n_of_a_kind(val_count, 3)
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 113, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 113, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 113, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_INCREF(__pyx_int_4);
-    __Pyx_GIVEREF(__pyx_int_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_4)) __PYX_ERR(0, 113, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 113, __pyx_L1_error);
-    __pyx_t_5 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_4);
-    __pyx_t_4 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":112
- *     elif flush:
- *         return (5, tuple(values))  # Flush
- *     elif straight:             # <<<<<<<<<<<<<<
- *         return (4, tuple(values))  # Straight
- *     elif has_n_of_a_kind(val_count, 3):
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":114
- *     elif straight:
- *         return (4, tuple(values))  # Straight
- *     elif has_n_of_a_kind(val_count, 3):             # <<<<<<<<<<<<<<
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
- */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 114, __pyx_L1_error)
-  __pyx_t_3 = (__pyx_t_1 != 0);
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":115
- *         return (4, tuple(values))  # Straight
- *     elif has_n_of_a_kind(val_count, 3):
- *         three_kind = get_n_of_a_kind(val_count, 3)             # <<<<<<<<<<<<<<
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
- *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
- */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 115, __pyx_L1_error)
-    __pyx_v_three_kind = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":116
- *     elif has_n_of_a_kind(val_count, 3):
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)             # <<<<<<<<<<<<<<
- *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
- *     elif count_pairs(val_count) >= 2:
- */
-    { /* enter inner scope */
-      __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 116, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_9 = (__pyx_v_values + 5);
-      for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
-        __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr1__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_3 = (__pyx_8genexpr1__pyx_v_v != __pyx_v_three_kind);
-        if (__pyx_t_3) {
-          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr1__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 116, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_5);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_4, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 116, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-        }
-      }
-    } /* exit inner scope */
-    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 116, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_4)) __PYX_ERR(0, 116, __pyx_L1_error);
-    __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 116, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 116, __pyx_L1_error)
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_5, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 116, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_v_kicker = __pyx_t_6;
-    __pyx_t_6 = 0;
-
-    /* "hand_rank_monte_carlo.pyx":117
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
- *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind             # <<<<<<<<<<<<<<
- *     elif count_pairs(val_count) >= 2:
- *         pairs = get_pairs(val_count)
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_three_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 117, __pyx_L1_error);
-    __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PySequence_Tuple(__pyx_v_kicker); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_INCREF(__pyx_int_3);
-    __Pyx_GIVEREF(__pyx_int_3);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_3)) __PYX_ERR(0, 117, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_5)) __PYX_ERR(0, 117, __pyx_L1_error);
-    __pyx_t_5 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_6);
-    __pyx_t_6 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":114
- *     elif straight:
- *         return (4, tuple(values))  # Straight
- *     elif has_n_of_a_kind(val_count, 3):             # <<<<<<<<<<<<<<
- *         three_kind = get_n_of_a_kind(val_count, 3)
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":118
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
- *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
- *     elif count_pairs(val_count) >= 2:             # <<<<<<<<<<<<<<
- *         pairs = get_pairs(val_count)
- *         kicker = max([v for v in values if v not in pairs])
- */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_count_pairs(__pyx_v_val_count); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 118, __pyx_L1_error)
-  __pyx_t_3 = (__pyx_t_1 >= 2);
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":119
- *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
- *     elif count_pairs(val_count) >= 2:
- *         pairs = get_pairs(val_count)             # <<<<<<<<<<<<<<
- *         kicker = max([v for v in values if v not in pairs])
- *         return (2, tuple(pairs) + (kicker,))  # Two pair
- */
-    __pyx_t_6 = __pyx_f_21hand_rank_monte_carlo_get_pairs(__pyx_v_val_count); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 119, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_v_pairs = ((PyObject*)__pyx_t_6);
-    __pyx_t_6 = 0;
-
-    /* "hand_rank_monte_carlo.pyx":120
- *     elif count_pairs(val_count) >= 2:
- *         pairs = get_pairs(val_count)
- *         kicker = max([v for v in values if v not in pairs])             # <<<<<<<<<<<<<<
- *         return (2, tuple(pairs) + (kicker,))  # Two pair
- *     elif has_n_of_a_kind(val_count, 2):
- */
-    { /* enter inner scope */
-      __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 120, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_9 = (__pyx_v_values + 5);
-      for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
-        __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr2__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr2__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_5);
-        __pyx_t_3 = (__Pyx_PySequence_ContainsTF(__pyx_t_5, __pyx_v_pairs, Py_NE)); if (unlikely((__pyx_t_3 < 0))) __PYX_ERR(0, 120, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-        if (__pyx_t_3) {
-          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr2__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_5);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_6, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 120, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-        }
-      }
-    } /* exit inner scope */
-    __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_v_kicker = __pyx_t_5;
-    __pyx_t_5 = 0;
-
-    /* "hand_rank_monte_carlo.pyx":121
- *         pairs = get_pairs(val_count)
- *         kicker = max([v for v in values if v not in pairs])
- *         return (2, tuple(pairs) + (kicker,))  # Two pair             # <<<<<<<<<<<<<<
- *     elif has_n_of_a_kind(val_count, 2):
- *         pair = get_n_of_a_kind(val_count, 2)
- */
-    __Pyx_XDECREF(__pyx_r);
-    if (unlikely(__pyx_v_pairs == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-      __PYX_ERR(0, 121, __pyx_L1_error)
-    }
-    __pyx_t_5 = PyList_AsTuple(__pyx_v_pairs); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_INCREF(__pyx_v_kicker);
-    __Pyx_GIVEREF(__pyx_v_kicker);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_kicker)) __PYX_ERR(0, 121, __pyx_L1_error);
-    __pyx_t_4 = PyNumber_Add(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_INCREF(__pyx_int_2);
-    __Pyx_GIVEREF(__pyx_int_2);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_2)) __PYX_ERR(0, 121, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_4)) __PYX_ERR(0, 121, __pyx_L1_error);
-    __pyx_t_4 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_6);
-    __pyx_t_6 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":118
- *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
- *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
- *     elif count_pairs(val_count) >= 2:             # <<<<<<<<<<<<<<
- *         pairs = get_pairs(val_count)
- *         kicker = max([v for v in values if v not in pairs])
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":122
- *         kicker = max([v for v in values if v not in pairs])
- *         return (2, tuple(pairs) + (kicker,))  # Two pair
- *     elif has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
- *         pair = get_n_of_a_kind(val_count, 2)
- *         kicker = sorted([v for v in values if v != pair], reverse=True)
- */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 122, __pyx_L1_error)
-  __pyx_t_3 = (__pyx_t_1 != 0);
-  if (__pyx_t_3) {
-
-    /* "hand_rank_monte_carlo.pyx":123
- *         return (2, tuple(pairs) + (kicker,))  # Two pair
- *     elif has_n_of_a_kind(val_count, 2):
- *         pair = get_n_of_a_kind(val_count, 2)             # <<<<<<<<<<<<<<
- *         kicker = sorted([v for v in values if v != pair], reverse=True)
- *         return (1, (pair,) + tuple(kicker))  # One pair
- */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L1_error)
-    __pyx_v_pair = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":124
- *     elif has_n_of_a_kind(val_count, 2):
- *         pair = get_n_of_a_kind(val_count, 2)
- *         kicker = sorted([v for v in values if v != pair], reverse=True)             # <<<<<<<<<<<<<<
- *         return (1, (pair,) + tuple(kicker))  # One pair
- *     else:
- */
-    { /* enter inner scope */
-      __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_9 = (__pyx_v_values + 5);
-      for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
-        __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr3__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_3 = (__pyx_8genexpr3__pyx_v_v != __pyx_v_pair);
-        if (__pyx_t_3) {
-          __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_8genexpr3__pyx_v_v); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 124, __pyx_L1_error)
-          __Pyx_GOTREF(__pyx_t_4);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_6, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 124, __pyx_L1_error)
-          __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-        }
-      }
-    } /* exit inner scope */
-    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error);
-    __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 124, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 124, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_v_kicker = __pyx_t_5;
-    __pyx_t_5 = 0;
-
-    /* "hand_rank_monte_carlo.pyx":125
- *         pair = get_n_of_a_kind(val_count, 2)
- *         kicker = sorted([v for v in values if v != pair], reverse=True)
- *         return (1, (pair,) + tuple(kicker))  # One pair             # <<<<<<<<<<<<<<
- *     else:
- *         return (0, tuple(values))  # High card
- */
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_pair); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 125, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 125, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5)) __PYX_ERR(0, 125, __pyx_L1_error);
-    __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_v_kicker); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 125, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = PyNumber_Add(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 125, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 125, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_INCREF(__pyx_int_1);
-    __Pyx_GIVEREF(__pyx_int_1);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_int_1)) __PYX_ERR(0, 125, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 125, __pyx_L1_error);
-    __pyx_t_4 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_5);
-    __pyx_t_5 = 0;
-    goto __pyx_L0;
-
-    /* "hand_rank_monte_carlo.pyx":122
- *         kicker = max([v for v in values if v not in pairs])
- *         return (2, tuple(pairs) + (kicker,))  # Two pair
- *     elif has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
- *         pair = get_n_of_a_kind(val_count, 2)
- *         kicker = sorted([v for v in values if v != pair], reverse=True)
- */
-  }
-
-  /* "hand_rank_monte_carlo.pyx":127
- *         return (1, (pair,) + tuple(kicker))  # One pair
- *     else:
- *         return (0, tuple(values))  # High card             # <<<<<<<<<<<<<<
- * 
- * @cython.boundscheck(False)
- */
-  /*else*/ {
-    __Pyx_XDECREF(__pyx_r);
-    __pyx_t_5 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PySequence_Tuple(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 127, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_INCREF(__pyx_int_0);
-    __Pyx_GIVEREF(__pyx_int_0);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_int_0)) __PYX_ERR(0, 127, __pyx_L1_error);
-    __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 127, __pyx_L1_error);
-    __pyx_t_4 = 0;
-    __pyx_r = ((PyObject*)__pyx_t_5);
-    __pyx_t_5 = 0;
-    goto __pyx_L0;
-  }
-
-  /* "hand_rank_monte_carlo.pyx":71
- *     return best_rank
- * 
- * cdef tuple single_hand_rank(char hand[5][2]):             # <<<<<<<<<<<<<<
- *     cdef int values[5]
- *     cdef char suits[5]
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("hand_rank_monte_carlo.single_hand_rank", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = 0;
-  __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_kicker);
-  __Pyx_XDECREF(__pyx_v_pairs);
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "hand_rank_monte_carlo.pyx":131
+/* "hand_rank_monte_carlo.pyx":73
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):             # <<<<<<<<<<<<<<
  *     setup_module()
- *     srand(time(NULL))
+ *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
  */
 
 static PyObject *__pyx_pw_21hand_rank_monte_carlo_7monte_carlo_simulation(PyObject *__pyx_self, 
@@ -4846,7 +3988,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   int __pyx_v_i;
   int __pyx_v_j;
   int __pyx_v_wins;
-  CYTHON_UNUSED int __pyx_v_total_community_cards;
+  int __pyx_v_total_community_cards;
   int __pyx_v_found;
   int __pyx_v_k;
   char __pyx_v_deck[52][2];
@@ -4857,6 +3999,13 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   int __pyx_v_num_cards;
   PyObject *__pyx_v_card = NULL;
   CYTHON_UNUSED int __pyx_v_sim_index;
+  PyObject *__pyx_v_py_opponent_hand = NULL;
+  PyObject *__pyx_v_py_remaining_community = NULL;
+  PyObject *__pyx_v_combined_community = NULL;
+  PyObject *__pyx_v_player_best_hand = NULL;
+  PyObject *__pyx_v_opponent_best_hand = NULL;
+  long __pyx_7genexpr__pyx_v_x;
+  long __pyx_8genexpr1__pyx_v_x;
   double __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4876,6 +4025,8 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   int __pyx_t_15;
   int __pyx_t_16;
   int __pyx_t_17;
+  long __pyx_t_18;
+  long __pyx_t_19;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -4886,14 +4037,14 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     }
   }
 
-  /* "hand_rank_monte_carlo.pyx":132
+  /* "hand_rank_monte_carlo.pyx":74
  * @cython.wraparound(False)
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):
  *     setup_module()             # <<<<<<<<<<<<<<
- *     srand(time(NULL))
  *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
+ *     cdef int found, k
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_setup_module); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 132, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_setup_module); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_4 = 0;
@@ -4913,37 +4064,28 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     PyObject *__pyx_callargs[2] = {__pyx_t_3, NULL};
     __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 0+__pyx_t_4);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 132, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":133
+  /* "hand_rank_monte_carlo.pyx":75
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):
  *     setup_module()
- *     srand(time(NULL))             # <<<<<<<<<<<<<<
- *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
- *     cdef int num_remaining_community_cards, found, k
- */
-  srand(time(NULL));
-
-  /* "hand_rank_monte_carlo.pyx":134
- *     setup_module()
- *     srand(time(NULL))
  *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)             # <<<<<<<<<<<<<<
- *     cdef int num_remaining_community_cards, found, k
+ *     cdef int found, k
  *     cdef char deck[52][2], shuffled_deck[52][2]
  */
   __pyx_v_wins = 0;
   if (unlikely(__pyx_v_community_cards == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 134, __pyx_L1_error)
+    __PYX_ERR(0, 75, __pyx_L1_error)
   }
-  __pyx_t_5 = __Pyx_PyList_GET_SIZE(__pyx_v_community_cards); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyList_GET_SIZE(__pyx_v_community_cards); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 75, __pyx_L1_error)
   __pyx_v_total_community_cards = __pyx_t_5;
 
-  /* "hand_rank_monte_carlo.pyx":140
+  /* "hand_rank_monte_carlo.pyx":81
  *     cdef char opponent_hand[2][2]
  *     cdef char remaining_community_cards[5][2]
  *     cdef int num_cards = 0             # <<<<<<<<<<<<<<
@@ -4952,7 +4094,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
   __pyx_v_num_cards = 0;
 
-  /* "hand_rank_monte_carlo.pyx":143
+  /* "hand_rank_monte_carlo.pyx":84
  * 
  *     # Initialize deck
  *     for i in range(52):             # <<<<<<<<<<<<<<
@@ -4962,7 +4104,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   for (__pyx_t_4 = 0; __pyx_t_4 < 52; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "hand_rank_monte_carlo.pyx":144
+    /* "hand_rank_monte_carlo.pyx":85
  *     # Initialize deck
  *     for i in range(52):
  *         deck[i][0] = SUITS[i % 4]             # <<<<<<<<<<<<<<
@@ -4971,7 +4113,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
     ((__pyx_v_deck[__pyx_v_i])[0]) = (__pyx_v_21hand_rank_monte_carlo_SUITS[__Pyx_mod_long(__pyx_v_i, 4)]);
 
-    /* "hand_rank_monte_carlo.pyx":145
+    /* "hand_rank_monte_carlo.pyx":86
  *     for i in range(52):
  *         deck[i][0] = SUITS[i % 4]
  *         deck[i][1] = RANKS[i // 4]             # <<<<<<<<<<<<<<
@@ -4981,14 +4123,14 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     ((__pyx_v_deck[__pyx_v_i])[1]) = (__pyx_v_21hand_rank_monte_carlo_RANKS[__Pyx_div_long(__pyx_v_i, 4)]);
   }
 
-  /* "hand_rank_monte_carlo.pyx":148
+  /* "hand_rank_monte_carlo.pyx":89
  * 
  *     # Parse player and community cards into C arrays
  *     for card in player_hand + community_cards:             # <<<<<<<<<<<<<<
  *         if num_cards < 7:
  *             cards[num_cards][0] = card[0].encode('utf-8')[0]
  */
-  __pyx_t_1 = PyNumber_Add(__pyx_v_player_hand, __pyx_v_community_cards); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Add(__pyx_v_player_hand, __pyx_v_community_cards); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2);
   __pyx_t_5 = 0;
@@ -4997,20 +4139,20 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_2);
       #if !CYTHON_ASSUME_SAFE_MACROS
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 148, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 89, __pyx_L1_error)
       #endif
       if (__pyx_t_5 >= __pyx_temp) break;
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 148, __pyx_L1_error)
+    __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 89, __pyx_L1_error)
     #else
-    __pyx_t_1 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_card, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "hand_rank_monte_carlo.pyx":149
+    /* "hand_rank_monte_carlo.pyx":90
  *     # Parse player and community cards into C arrays
  *     for card in player_hand + community_cards:
  *         if num_cards < 7:             # <<<<<<<<<<<<<<
@@ -5020,16 +4162,16 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     __pyx_t_6 = (__pyx_v_num_cards < 7);
     if (__pyx_t_6) {
 
-      /* "hand_rank_monte_carlo.pyx":150
+      /* "hand_rank_monte_carlo.pyx":91
  *     for card in player_hand + community_cards:
  *         if num_cards < 7:
  *             cards[num_cards][0] = card[0].encode('utf-8')[0]             # <<<<<<<<<<<<<<
  *             cards[num_cards][1] = card[1].encode('utf-8')[0]
  *             num_cards += 1
  */
-      __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_card, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_card, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 91, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_encode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 150, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_encode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 91, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __pyx_t_3 = NULL;
@@ -5050,27 +4192,27 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
         PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_kp_u_utf_8};
         __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_7, __pyx_callargs+1-__pyx_t_4, 1+__pyx_t_4);
         __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)
+        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 91, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       }
-      __pyx_t_7 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 150, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 91, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_8 = __Pyx_PyInt_As_char(__pyx_t_7); if (unlikely((__pyx_t_8 == (char)-1) && PyErr_Occurred())) __PYX_ERR(0, 150, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyInt_As_char(__pyx_t_7); if (unlikely((__pyx_t_8 == (char)-1) && PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       ((__pyx_v_cards[__pyx_v_num_cards])[0]) = __pyx_t_8;
 
-      /* "hand_rank_monte_carlo.pyx":151
+      /* "hand_rank_monte_carlo.pyx":92
  *         if num_cards < 7:
  *             cards[num_cards][0] = card[0].encode('utf-8')[0]
  *             cards[num_cards][1] = card[1].encode('utf-8')[0]             # <<<<<<<<<<<<<<
  *             num_cards += 1
  * 
  */
-      __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_card, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 151, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_card, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 92, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_encode); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 151, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_encode); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 92, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __pyx_t_1 = NULL;
@@ -5091,18 +4233,18 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
         PyObject *__pyx_callargs[2] = {__pyx_t_1, __pyx_kp_u_utf_8};
         __pyx_t_7 = __Pyx_PyObject_FastCall(__pyx_t_3, __pyx_callargs+1-__pyx_t_4, 1+__pyx_t_4);
         __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-        if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 151, __pyx_L1_error)
+        if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 92, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_7);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
-      __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 151, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 92, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-      __pyx_t_8 = __Pyx_PyInt_As_char(__pyx_t_3); if (unlikely((__pyx_t_8 == (char)-1) && PyErr_Occurred())) __PYX_ERR(0, 151, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyInt_As_char(__pyx_t_3); if (unlikely((__pyx_t_8 == (char)-1) && PyErr_Occurred())) __PYX_ERR(0, 92, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       ((__pyx_v_cards[__pyx_v_num_cards])[1]) = __pyx_t_8;
 
-      /* "hand_rank_monte_carlo.pyx":152
+      /* "hand_rank_monte_carlo.pyx":93
  *             cards[num_cards][0] = card[0].encode('utf-8')[0]
  *             cards[num_cards][1] = card[1].encode('utf-8')[0]
  *             num_cards += 1             # <<<<<<<<<<<<<<
@@ -5111,7 +4253,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
       __pyx_v_num_cards = (__pyx_v_num_cards + 1);
 
-      /* "hand_rank_monte_carlo.pyx":149
+      /* "hand_rank_monte_carlo.pyx":90
  *     # Parse player and community cards into C arrays
  *     for card in player_hand + community_cards:
  *         if num_cards < 7:             # <<<<<<<<<<<<<<
@@ -5120,7 +4262,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
     }
 
-    /* "hand_rank_monte_carlo.pyx":148
+    /* "hand_rank_monte_carlo.pyx":89
  * 
  *     # Parse player and community cards into C arrays
  *     for card in player_hand + community_cards:             # <<<<<<<<<<<<<<
@@ -5130,7 +4272,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":155
+  /* "hand_rank_monte_carlo.pyx":96
  * 
  *     # Simulation loop
  *     for sim_index in range(num_simulations):             # <<<<<<<<<<<<<<
@@ -5142,7 +4284,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_sim_index = __pyx_t_10;
 
-    /* "hand_rank_monte_carlo.pyx":156
+    /* "hand_rank_monte_carlo.pyx":97
  *     # Simulation loop
  *     for sim_index in range(num_simulations):
  *         memcpy(shuffled_deck, deck, sizeof(deck))             # <<<<<<<<<<<<<<
@@ -5151,7 +4293,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
     (void)(memcpy(__pyx_v_shuffled_deck, __pyx_v_deck, (sizeof(__pyx_v_deck))));
 
-    /* "hand_rank_monte_carlo.pyx":157
+    /* "hand_rank_monte_carlo.pyx":98
  *     for sim_index in range(num_simulations):
  *         memcpy(shuffled_deck, deck, sizeof(deck))
  *         for i in range(52):             # <<<<<<<<<<<<<<
@@ -5161,7 +4303,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     for (__pyx_t_11 = 0; __pyx_t_11 < 52; __pyx_t_11+=1) {
       __pyx_v_i = __pyx_t_11;
 
-      /* "hand_rank_monte_carlo.pyx":158
+      /* "hand_rank_monte_carlo.pyx":99
  *         memcpy(shuffled_deck, deck, sizeof(deck))
  *         for i in range(52):
  *             j = rand() % (52 - i) + i             # <<<<<<<<<<<<<<
@@ -5172,11 +4314,11 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
       __pyx_t_13 = (52 - __pyx_v_i);
       if (unlikely(__pyx_t_13 == 0)) {
         PyErr_SetString(PyExc_ZeroDivisionError, "integer division or modulo by zero");
-        __PYX_ERR(0, 158, __pyx_L1_error)
+        __PYX_ERR(0, 99, __pyx_L1_error)
       }
       __pyx_v_j = (__Pyx_mod_long(__pyx_t_12, __pyx_t_13) + __pyx_v_i);
 
-      /* "hand_rank_monte_carlo.pyx":159
+      /* "hand_rank_monte_carlo.pyx":100
  *         for i in range(52):
  *             j = rand() % (52 - i) + i
  *             shuffled_deck[i][0], shuffled_deck[j][0] = shuffled_deck[j][0], shuffled_deck[i][0]             # <<<<<<<<<<<<<<
@@ -5188,7 +4330,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
       ((__pyx_v_shuffled_deck[__pyx_v_i])[0]) = __pyx_t_8;
       ((__pyx_v_shuffled_deck[__pyx_v_j])[0]) = __pyx_t_14;
 
-      /* "hand_rank_monte_carlo.pyx":160
+      /* "hand_rank_monte_carlo.pyx":101
  *             j = rand() % (52 - i) + i
  *             shuffled_deck[i][0], shuffled_deck[j][0] = shuffled_deck[j][0], shuffled_deck[i][0]
  *             shuffled_deck[i][1], shuffled_deck[j][1] = shuffled_deck[j][1], shuffled_deck[i][1]             # <<<<<<<<<<<<<<
@@ -5201,7 +4343,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
       ((__pyx_v_shuffled_deck[__pyx_v_j])[1]) = __pyx_t_8;
     }
 
-    /* "hand_rank_monte_carlo.pyx":163
+    /* "hand_rank_monte_carlo.pyx":104
  * 
  *         # Deal cards not in use
  *         k = 0             # <<<<<<<<<<<<<<
@@ -5210,7 +4352,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
     __pyx_v_k = 0;
 
-    /* "hand_rank_monte_carlo.pyx":164
+    /* "hand_rank_monte_carlo.pyx":105
  *         # Deal cards not in use
  *         k = 0
  *         for i in range(52):             # <<<<<<<<<<<<<<
@@ -5220,7 +4362,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     for (__pyx_t_11 = 0; __pyx_t_11 < 52; __pyx_t_11+=1) {
       __pyx_v_i = __pyx_t_11;
 
-      /* "hand_rank_monte_carlo.pyx":165
+      /* "hand_rank_monte_carlo.pyx":106
  *         k = 0
  *         for i in range(52):
  *             found = 0             # <<<<<<<<<<<<<<
@@ -5229,7 +4371,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
       __pyx_v_found = 0;
 
-      /* "hand_rank_monte_carlo.pyx":166
+      /* "hand_rank_monte_carlo.pyx":107
  *         for i in range(52):
  *             found = 0
  *             for j in range(num_cards):             # <<<<<<<<<<<<<<
@@ -5241,7 +4383,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
       for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
         __pyx_v_j = __pyx_t_16;
 
-        /* "hand_rank_monte_carlo.pyx":167
+        /* "hand_rank_monte_carlo.pyx":108
  *             found = 0
  *             for j in range(num_cards):
  *                 if shuffled_deck[i][0] == cards[j][0] and shuffled_deck[i][1] == cards[j][1]:             # <<<<<<<<<<<<<<
@@ -5259,7 +4401,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
         __pyx_L18_bool_binop_done:;
         if (__pyx_t_6) {
 
-          /* "hand_rank_monte_carlo.pyx":168
+          /* "hand_rank_monte_carlo.pyx":109
  *             for j in range(num_cards):
  *                 if shuffled_deck[i][0] == cards[j][0] and shuffled_deck[i][1] == cards[j][1]:
  *                     found = 1             # <<<<<<<<<<<<<<
@@ -5268,7 +4410,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
           __pyx_v_found = 1;
 
-          /* "hand_rank_monte_carlo.pyx":169
+          /* "hand_rank_monte_carlo.pyx":110
  *                 if shuffled_deck[i][0] == cards[j][0] and shuffled_deck[i][1] == cards[j][1]:
  *                     found = 1
  *                     break             # <<<<<<<<<<<<<<
@@ -5277,7 +4419,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
           goto __pyx_L16_break;
 
-          /* "hand_rank_monte_carlo.pyx":167
+          /* "hand_rank_monte_carlo.pyx":108
  *             found = 0
  *             for j in range(num_cards):
  *                 if shuffled_deck[i][0] == cards[j][0] and shuffled_deck[i][1] == cards[j][1]:             # <<<<<<<<<<<<<<
@@ -5288,7 +4430,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
       }
       __pyx_L16_break:;
 
-      /* "hand_rank_monte_carlo.pyx":170
+      /* "hand_rank_monte_carlo.pyx":111
  *                     found = 1
  *                     break
  *             if not found:             # <<<<<<<<<<<<<<
@@ -5298,7 +4440,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
       __pyx_t_6 = (!(__pyx_v_found != 0));
       if (__pyx_t_6) {
 
-        /* "hand_rank_monte_carlo.pyx":171
+        /* "hand_rank_monte_carlo.pyx":112
  *                     break
  *             if not found:
  *                 if k < 2:             # <<<<<<<<<<<<<<
@@ -5308,7 +4450,7 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
         __pyx_t_6 = (__pyx_v_k < 2);
         if (__pyx_t_6) {
 
-          /* "hand_rank_monte_carlo.pyx":172
+          /* "hand_rank_monte_carlo.pyx":113
  *             if not found:
  *                 if k < 2:
  *                     opponent_hand[k][0] = shuffled_deck[i][0]             # <<<<<<<<<<<<<<
@@ -5317,25 +4459,25 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
  */
           ((__pyx_v_opponent_hand[__pyx_v_k])[0]) = ((__pyx_v_shuffled_deck[__pyx_v_i])[0]);
 
-          /* "hand_rank_monte_carlo.pyx":173
+          /* "hand_rank_monte_carlo.pyx":114
  *                 if k < 2:
  *                     opponent_hand[k][0] = shuffled_deck[i][0]
  *                     opponent_hand[k][1] = shuffled_deck[i][1]             # <<<<<<<<<<<<<<
  *                     k += 1
- *                 elif k < 7:
+ *                 elif k < (5 - total_community_cards):
  */
           ((__pyx_v_opponent_hand[__pyx_v_k])[1]) = ((__pyx_v_shuffled_deck[__pyx_v_i])[1]);
 
-          /* "hand_rank_monte_carlo.pyx":174
+          /* "hand_rank_monte_carlo.pyx":115
  *                     opponent_hand[k][0] = shuffled_deck[i][0]
  *                     opponent_hand[k][1] = shuffled_deck[i][1]
  *                     k += 1             # <<<<<<<<<<<<<<
- *                 elif k < 7:
- *                     remaining_community_cards[k-2][0] = shuffled_deck[i][0]
+ *                 elif k < (5 - total_community_cards):
+ *                     remaining_community_cards[k][0] = shuffled_deck[i][0]
  */
           __pyx_v_k = (__pyx_v_k + 1);
 
-          /* "hand_rank_monte_carlo.pyx":171
+          /* "hand_rank_monte_carlo.pyx":112
  *                     break
  *             if not found:
  *                 if k < 2:             # <<<<<<<<<<<<<<
@@ -5345,82 +4487,82 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
           goto __pyx_L21;
         }
 
-        /* "hand_rank_monte_carlo.pyx":175
+        /* "hand_rank_monte_carlo.pyx":116
  *                     opponent_hand[k][1] = shuffled_deck[i][1]
  *                     k += 1
- *                 elif k < 7:             # <<<<<<<<<<<<<<
- *                     remaining_community_cards[k-2][0] = shuffled_deck[i][0]
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]
+ *                 elif k < (5 - total_community_cards):             # <<<<<<<<<<<<<<
+ *                     remaining_community_cards[k][0] = shuffled_deck[i][0]
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]
  */
-        __pyx_t_6 = (__pyx_v_k < 7);
+        __pyx_t_6 = (__pyx_v_k < (5 - __pyx_v_total_community_cards));
         if (__pyx_t_6) {
 
-          /* "hand_rank_monte_carlo.pyx":176
+          /* "hand_rank_monte_carlo.pyx":117
  *                     k += 1
- *                 elif k < 7:
- *                     remaining_community_cards[k-2][0] = shuffled_deck[i][0]             # <<<<<<<<<<<<<<
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]
+ *                 elif k < (5 - total_community_cards):
+ *                     remaining_community_cards[k][0] = shuffled_deck[i][0]             # <<<<<<<<<<<<<<
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]
  *                     k += 1
  */
-          ((__pyx_v_remaining_community_cards[(__pyx_v_k - 2)])[0]) = ((__pyx_v_shuffled_deck[__pyx_v_i])[0]);
+          ((__pyx_v_remaining_community_cards[__pyx_v_k])[0]) = ((__pyx_v_shuffled_deck[__pyx_v_i])[0]);
 
-          /* "hand_rank_monte_carlo.pyx":177
- *                 elif k < 7:
- *                     remaining_community_cards[k-2][0] = shuffled_deck[i][0]
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]             # <<<<<<<<<<<<<<
+          /* "hand_rank_monte_carlo.pyx":118
+ *                 elif k < (5 - total_community_cards):
+ *                     remaining_community_cards[k][0] = shuffled_deck[i][0]
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]             # <<<<<<<<<<<<<<
  *                     k += 1
- *                 if k == 7:
+ *                 if k == (5 - total_community_cards):
  */
-          ((__pyx_v_remaining_community_cards[(__pyx_v_k - 2)])[1]) = ((__pyx_v_shuffled_deck[__pyx_v_i])[1]);
+          ((__pyx_v_remaining_community_cards[__pyx_v_k])[1]) = ((__pyx_v_shuffled_deck[__pyx_v_i])[1]);
 
-          /* "hand_rank_monte_carlo.pyx":178
- *                     remaining_community_cards[k-2][0] = shuffled_deck[i][0]
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]
+          /* "hand_rank_monte_carlo.pyx":119
+ *                     remaining_community_cards[k][0] = shuffled_deck[i][0]
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]
  *                     k += 1             # <<<<<<<<<<<<<<
- *                 if k == 7:
+ *                 if k == (5 - total_community_cards):
  *                     break
  */
           __pyx_v_k = (__pyx_v_k + 1);
 
-          /* "hand_rank_monte_carlo.pyx":175
+          /* "hand_rank_monte_carlo.pyx":116
  *                     opponent_hand[k][1] = shuffled_deck[i][1]
  *                     k += 1
- *                 elif k < 7:             # <<<<<<<<<<<<<<
- *                     remaining_community_cards[k-2][0] = shuffled_deck[i][0]
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]
+ *                 elif k < (5 - total_community_cards):             # <<<<<<<<<<<<<<
+ *                     remaining_community_cards[k][0] = shuffled_deck[i][0]
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]
  */
         }
         __pyx_L21:;
 
-        /* "hand_rank_monte_carlo.pyx":179
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]
+        /* "hand_rank_monte_carlo.pyx":120
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]
  *                     k += 1
- *                 if k == 7:             # <<<<<<<<<<<<<<
+ *                 if k == (5 - total_community_cards):             # <<<<<<<<<<<<<<
  *                     break
  * 
  */
-        __pyx_t_6 = (__pyx_v_k == 7);
+        __pyx_t_6 = (__pyx_v_k == (5 - __pyx_v_total_community_cards));
         if (__pyx_t_6) {
 
-          /* "hand_rank_monte_carlo.pyx":180
+          /* "hand_rank_monte_carlo.pyx":121
  *                     k += 1
- *                 if k == 7:
+ *                 if k == (5 - total_community_cards):
  *                     break             # <<<<<<<<<<<<<<
  * 
- *         # Evaluate hands using a C-compatible hand_rank function
+ *         # Convert opponent_hand and remaining_community_cards to Python lists
  */
           goto __pyx_L14_break;
 
-          /* "hand_rank_monte_carlo.pyx":179
- *                     remaining_community_cards[k-2][1] = shuffled_deck[i][1]
+          /* "hand_rank_monte_carlo.pyx":120
+ *                     remaining_community_cards[k][1] = shuffled_deck[i][1]
  *                     k += 1
- *                 if k == 7:             # <<<<<<<<<<<<<<
+ *                 if k == (5 - total_community_cards):             # <<<<<<<<<<<<<<
  *                     break
  * 
  */
         }
 
-        /* "hand_rank_monte_carlo.pyx":170
+        /* "hand_rank_monte_carlo.pyx":111
  *                     found = 1
  *                     break
  *             if not found:             # <<<<<<<<<<<<<<
@@ -5431,63 +4573,173 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
     }
     __pyx_L14_break:;
 
-    /* "hand_rank_monte_carlo.pyx":183
+    /* "hand_rank_monte_carlo.pyx":124
  * 
- *         # Evaluate hands using a C-compatible hand_rank function
- *         if hand_rank(cards, remaining_community_cards) > hand_rank(opponent_hand, remaining_community_cards):             # <<<<<<<<<<<<<<
+ *         # Convert opponent_hand and remaining_community_cards to Python lists
+ *         py_opponent_hand = [f"{chr(opponent_hand[x][0])}{chr(opponent_hand[x][1])}" for x in range(2)]             # <<<<<<<<<<<<<<
+ *         py_remaining_community = [f"{chr(remaining_community_cards[x][0])}{chr(remaining_community_cards[x][1])}" for x in range(5 - total_community_cards)]
+ * 
+ */
+    { /* enter inner scope */
+      __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      for (__pyx_t_13 = 0; __pyx_t_13 < 2; __pyx_t_13+=1) {
+        __pyx_7genexpr__pyx_v_x = __pyx_t_13;
+        __pyx_t_3 = __Pyx_PyInt_From_char(((__pyx_v_opponent_hand[__pyx_7genexpr__pyx_v_x])[0])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_builtin_chr, __pyx_t_3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __pyx_t_3 = __Pyx_PyObject_FormatSimple(__pyx_t_7, __pyx_empty_unicode); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyInt_From_char(((__pyx_v_opponent_hand[__pyx_7genexpr__pyx_v_x])[1])); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_chr, __pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_t_1, __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        __pyx_t_1 = __Pyx_PyUnicode_ConcatInPlace(__pyx_t_3, __pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_1))) __PYX_ERR(0, 124, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      }
+    } /* exit inner scope */
+    __Pyx_XDECREF_SET(__pyx_v_py_opponent_hand, ((PyObject*)__pyx_t_2));
+    __pyx_t_2 = 0;
+
+    /* "hand_rank_monte_carlo.pyx":125
+ *         # Convert opponent_hand and remaining_community_cards to Python lists
+ *         py_opponent_hand = [f"{chr(opponent_hand[x][0])}{chr(opponent_hand[x][1])}" for x in range(2)]
+ *         py_remaining_community = [f"{chr(remaining_community_cards[x][0])}{chr(remaining_community_cards[x][1])}" for x in range(5 - total_community_cards)]             # <<<<<<<<<<<<<<
+ * 
+ *         # Combine provided community cards and drawn community cards
+ */
+    { /* enter inner scope */
+      __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 125, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_13 = (5 - __pyx_v_total_community_cards);
+      __pyx_t_18 = __pyx_t_13;
+      for (__pyx_t_19 = 0; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
+        __pyx_8genexpr1__pyx_v_x = __pyx_t_19;
+        __pyx_t_1 = __Pyx_PyInt_From_char(((__pyx_v_remaining_community_cards[__pyx_8genexpr1__pyx_v_x])[0])); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_builtin_chr, __pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        __pyx_t_1 = __Pyx_PyObject_FormatSimple(__pyx_t_7, __pyx_empty_unicode); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyInt_From_char(((__pyx_v_remaining_community_cards[__pyx_8genexpr1__pyx_v_x])[1])); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_chr, __pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __pyx_t_7 = __Pyx_PyObject_FormatSimple(__pyx_t_3, __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __pyx_t_3 = __Pyx_PyUnicode_ConcatInPlace(__pyx_t_1, __pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+      }
+    } /* exit inner scope */
+    __Pyx_XDECREF_SET(__pyx_v_py_remaining_community, ((PyObject*)__pyx_t_2));
+    __pyx_t_2 = 0;
+
+    /* "hand_rank_monte_carlo.pyx":128
+ * 
+ *         # Combine provided community cards and drawn community cards
+ *         combined_community = community_cards + py_remaining_community             # <<<<<<<<<<<<<<
+ * 
+ *         player_best_hand = get_best_hand(player_hand, combined_community)
+ */
+    __pyx_t_2 = PyNumber_Add(__pyx_v_community_cards, __pyx_v_py_remaining_community); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 128, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_XDECREF_SET(__pyx_v_combined_community, ((PyObject*)__pyx_t_2));
+    __pyx_t_2 = 0;
+
+    /* "hand_rank_monte_carlo.pyx":130
+ *         combined_community = community_cards + py_remaining_community
+ * 
+ *         player_best_hand = get_best_hand(player_hand, combined_community)             # <<<<<<<<<<<<<<
+ *         opponent_best_hand = get_best_hand(py_opponent_hand, combined_community)
+ * 
+ */
+    __pyx_t_2 = __pyx_f_21hand_rank_monte_carlo_get_best_hand(__pyx_v_player_hand, __pyx_v_combined_community, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_XDECREF_SET(__pyx_v_player_best_hand, ((PyObject*)__pyx_t_2));
+    __pyx_t_2 = 0;
+
+    /* "hand_rank_monte_carlo.pyx":131
+ * 
+ *         player_best_hand = get_best_hand(player_hand, combined_community)
+ *         opponent_best_hand = get_best_hand(py_opponent_hand, combined_community)             # <<<<<<<<<<<<<<
+ * 
+ *         if player_best_hand > opponent_best_hand:
+ */
+    __pyx_t_2 = __pyx_f_21hand_rank_monte_carlo_get_best_hand(__pyx_v_py_opponent_hand, __pyx_v_combined_community, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_XDECREF_SET(__pyx_v_opponent_best_hand, ((PyObject*)__pyx_t_2));
+    __pyx_t_2 = 0;
+
+    /* "hand_rank_monte_carlo.pyx":133
+ *         opponent_best_hand = get_best_hand(py_opponent_hand, combined_community)
+ * 
+ *         if player_best_hand > opponent_best_hand:             # <<<<<<<<<<<<<<
  *             wins += 1
  * 
  */
-    __pyx_t_2 = __pyx_f_21hand_rank_monte_carlo_hand_rank(__pyx_v_cards, __pyx_v_remaining_community_cards); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 183, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __pyx_f_21hand_rank_monte_carlo_hand_rank(__pyx_v_opponent_hand, __pyx_v_remaining_community_cards); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 183, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_7 = PyObject_RichCompare(__pyx_t_2, __pyx_t_3, Py_GT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 183, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(__pyx_v_player_best_hand, __pyx_v_opponent_best_hand, Py_GT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely((__pyx_t_6 < 0))) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely((__pyx_t_6 < 0))) __PYX_ERR(0, 183, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     if (__pyx_t_6) {
 
-      /* "hand_rank_monte_carlo.pyx":184
- *         # Evaluate hands using a C-compatible hand_rank function
- *         if hand_rank(cards, remaining_community_cards) > hand_rank(opponent_hand, remaining_community_cards):
+      /* "hand_rank_monte_carlo.pyx":134
+ * 
+ *         if player_best_hand > opponent_best_hand:
  *             wins += 1             # <<<<<<<<<<<<<<
  * 
  *     return wins / float(num_simulations)
  */
       __pyx_v_wins = (__pyx_v_wins + 1);
 
-      /* "hand_rank_monte_carlo.pyx":183
+      /* "hand_rank_monte_carlo.pyx":133
+ *         opponent_best_hand = get_best_hand(py_opponent_hand, combined_community)
  * 
- *         # Evaluate hands using a C-compatible hand_rank function
- *         if hand_rank(cards, remaining_community_cards) > hand_rank(opponent_hand, remaining_community_cards):             # <<<<<<<<<<<<<<
+ *         if player_best_hand > opponent_best_hand:             # <<<<<<<<<<<<<<
  *             wins += 1
  * 
  */
     }
   }
 
-  /* "hand_rank_monte_carlo.pyx":186
+  /* "hand_rank_monte_carlo.pyx":136
  *             wins += 1
  * 
  *     return wins / float(num_simulations)             # <<<<<<<<<<<<<<
  * 
- * cdef tuple hand_rank(char[7][2] hand, char[5][2] community):
+ * cdef tuple single_hand_rank(char hand[5][2]):
  */
   if (unlikely(((double)__pyx_v_num_simulations) == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 186, __pyx_L1_error)
+    __PYX_ERR(0, 136, __pyx_L1_error)
   }
   __pyx_r = (((double)__pyx_v_wins) / ((double)__pyx_v_num_simulations));
   goto __pyx_L0;
 
-  /* "hand_rank_monte_carlo.pyx":131
+  /* "hand_rank_monte_carlo.pyx":73
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):             # <<<<<<<<<<<<<<
  *     setup_module()
- *     srand(time(NULL))
+ *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
  */
 
   /* function exit code */
@@ -5500,6 +4752,11 @@ static double __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(PyObject *_
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_card);
+  __Pyx_XDECREF(__pyx_v_py_opponent_hand);
+  __Pyx_XDECREF(__pyx_v_py_remaining_community);
+  __Pyx_XDECREF(__pyx_v_combined_community);
+  __Pyx_XDECREF(__pyx_v_player_best_hand);
+  __Pyx_XDECREF(__pyx_v_opponent_best_hand);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
@@ -5563,7 +4820,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 131, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -5571,21 +4828,21 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 131, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("monte_carlo_simulation", 0, 2, 3, 1); __PYX_ERR(0, 131, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("monte_carlo_simulation", 0, 2, 3, 1); __PYX_ERR(0, 73, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_num_simulations);
           if (value) { values[2] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 131, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "monte_carlo_simulation") < 0)) __PYX_ERR(0, 131, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "monte_carlo_simulation") < 0)) __PYX_ERR(0, 73, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -5600,14 +4857,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
     __pyx_v_player_hand = ((PyObject*)values[0]);
     __pyx_v_community_cards = ((PyObject*)values[1]);
     if (values[2]) {
-      __pyx_v_num_simulations = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_num_simulations == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 131, __pyx_L3_error)
+      __pyx_v_num_simulations = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_num_simulations == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
     } else {
       __pyx_v_num_simulations = ((int)0x3E8);
     }
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("monte_carlo_simulation", 0, 2, 3, __pyx_nargs); __PYX_ERR(0, 131, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("monte_carlo_simulation", 0, 2, 3, __pyx_nargs); __PYX_ERR(0, 73, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5621,8 +4878,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_player_hand), (&PyList_Type), 1, "player_hand", 1))) __PYX_ERR(0, 131, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_community_cards), (&PyList_Type), 1, "community_cards", 1))) __PYX_ERR(0, 131, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_player_hand), (&PyList_Type), 1, "player_hand", 1))) __PYX_ERR(0, 73, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_community_cards), (&PyList_Type), 1, "community_cards", 1))) __PYX_ERR(0, 73, __pyx_L1_error)
   __pyx_r = __pyx_pf_21hand_rank_monte_carlo_6monte_carlo_simulation(__pyx_self, __pyx_v_player_hand, __pyx_v_community_cards, __pyx_v_num_simulations);
 
   /* function exit code */
@@ -5653,8 +4910,8 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_6monte_carlo_simulation(CYTHON
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_2.__pyx_n = 1;
   __pyx_t_2.num_simulations = __pyx_v_num_simulations;
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(__pyx_v_player_hand, __pyx_v_community_cards, 0, &__pyx_t_2); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 131, __pyx_L1_error)
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_monte_carlo_simulation(__pyx_v_player_hand, __pyx_v_community_cards, 0, &__pyx_t_2); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
@@ -5671,31 +4928,30 @@ static PyObject *__pyx_pf_21hand_rank_monte_carlo_6monte_carlo_simulation(CYTHON
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":188
+/* "hand_rank_monte_carlo.pyx":138
  *     return wins / float(num_simulations)
  * 
- * cdef tuple hand_rank(char[7][2] hand, char[5][2] community):             # <<<<<<<<<<<<<<
+ * cdef tuple single_hand_rank(char hand[5][2]):             # <<<<<<<<<<<<<<
  *     cdef int values[5]
  *     cdef char suits[5]
  */
 
-static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[2], char (*__pyx_v_community)[2]) {
+static PyObject *__pyx_f_21hand_rank_monte_carlo_single_hand_rank(char (*__pyx_v_hand)[2]) {
   int __pyx_v_values[5];
   char __pyx_v_suits[5];
   int __pyx_v_i;
   int __pyx_v_straight;
   int __pyx_v_flush;
   int __pyx_v_val_count[15];
-  char __pyx_v_combined_hand[5][2];
   int __pyx_v_four_kind;
   PyObject *__pyx_v_kicker = NULL;
   int __pyx_v_three_kind;
   int __pyx_v_pair;
   PyObject *__pyx_v_pairs = NULL;
+  int __pyx_8genexpr2__pyx_v_v;
+  int __pyx_8genexpr3__pyx_v_v;
   int __pyx_8genexpr4__pyx_v_v;
   int __pyx_8genexpr5__pyx_v_v;
-  int __pyx_8genexpr6__pyx_v_v;
-  int __pyx_8genexpr7__pyx_v_v;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5711,9 +4967,9 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("hand_rank", 1);
+  __Pyx_RefNannySetupContext("single_hand_rank", 1);
 
-  /* "hand_rank_monte_carlo.pyx":195
+  /* "hand_rank_monte_carlo.pyx":145
  * 
  *     # Initialize val_count to 0
  *     for i in range(15):             # <<<<<<<<<<<<<<
@@ -5723,106 +4979,48 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   for (__pyx_t_1 = 0; __pyx_t_1 < 15; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":196
+    /* "hand_rank_monte_carlo.pyx":146
  *     # Initialize val_count to 0
  *     for i in range(15):
  *         val_count[i] = 0             # <<<<<<<<<<<<<<
  * 
- *     # Combine hand and community cards into one array
+ *     # Populate value and suit arrays
  */
     (__pyx_v_val_count[__pyx_v_i]) = 0;
   }
 
-  /* "hand_rank_monte_carlo.pyx":200
- *     # Combine hand and community cards into one array
- *     cdef char combined_hand[5][2]
- *     for i in range(2):             # <<<<<<<<<<<<<<
- *         combined_hand[i][0] = hand[i][0]
- *         combined_hand[i][1] = hand[i][1]
- */
-  for (__pyx_t_1 = 0; __pyx_t_1 < 2; __pyx_t_1+=1) {
-    __pyx_v_i = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":201
- *     cdef char combined_hand[5][2]
- *     for i in range(2):
- *         combined_hand[i][0] = hand[i][0]             # <<<<<<<<<<<<<<
- *         combined_hand[i][1] = hand[i][1]
- *     for i in range(3):
- */
-    ((__pyx_v_combined_hand[__pyx_v_i])[0]) = ((__pyx_v_hand[__pyx_v_i])[0]);
-
-    /* "hand_rank_monte_carlo.pyx":202
- *     for i in range(2):
- *         combined_hand[i][0] = hand[i][0]
- *         combined_hand[i][1] = hand[i][1]             # <<<<<<<<<<<<<<
- *     for i in range(3):
- *         combined_hand[i+2][0] = community[i][0]
- */
-    ((__pyx_v_combined_hand[__pyx_v_i])[1]) = ((__pyx_v_hand[__pyx_v_i])[1]);
-  }
-
-  /* "hand_rank_monte_carlo.pyx":203
- *         combined_hand[i][0] = hand[i][0]
- *         combined_hand[i][1] = hand[i][1]
- *     for i in range(3):             # <<<<<<<<<<<<<<
- *         combined_hand[i+2][0] = community[i][0]
- *         combined_hand[i+2][1] = community[i][1]
- */
-  for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
-    __pyx_v_i = __pyx_t_1;
-
-    /* "hand_rank_monte_carlo.pyx":204
- *         combined_hand[i][1] = hand[i][1]
- *     for i in range(3):
- *         combined_hand[i+2][0] = community[i][0]             # <<<<<<<<<<<<<<
- *         combined_hand[i+2][1] = community[i][1]
- * 
- */
-    ((__pyx_v_combined_hand[(__pyx_v_i + 2)])[0]) = ((__pyx_v_community[__pyx_v_i])[0]);
-
-    /* "hand_rank_monte_carlo.pyx":205
- *     for i in range(3):
- *         combined_hand[i+2][0] = community[i][0]
- *         combined_hand[i+2][1] = community[i][1]             # <<<<<<<<<<<<<<
- * 
- *     # Populate value and suit arrays
- */
-    ((__pyx_v_combined_hand[(__pyx_v_i + 2)])[1]) = ((__pyx_v_community[__pyx_v_i])[1]);
-  }
-
-  /* "hand_rank_monte_carlo.pyx":208
+  /* "hand_rank_monte_carlo.pyx":149
  * 
  *     # Populate value and suit arrays
  *     for i in range(5):             # <<<<<<<<<<<<<<
- *         values[i] = card_value(combined_hand[i][1])
- *         suits[i] = combined_hand[i][0]
+ *         values[i] = card_value(hand[i][1])
+ *         suits[i] = hand[i][0]
  */
   for (__pyx_t_1 = 0; __pyx_t_1 < 5; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":209
+    /* "hand_rank_monte_carlo.pyx":150
  *     # Populate value and suit arrays
  *     for i in range(5):
- *         values[i] = card_value(combined_hand[i][1])             # <<<<<<<<<<<<<<
- *         suits[i] = combined_hand[i][0]
+ *         values[i] = card_value(hand[i][1])             # <<<<<<<<<<<<<<
+ *         suits[i] = hand[i][0]
  *         val_count[values[i]] += 1
  */
-    __pyx_t_2 = __pyx_f_21hand_rank_monte_carlo_card_value(((__pyx_v_combined_hand[__pyx_v_i])[1])); if (unlikely(__pyx_t_2 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 209, __pyx_L1_error)
+    __pyx_t_2 = __pyx_f_21hand_rank_monte_carlo_card_value(((__pyx_v_hand[__pyx_v_i])[1])); if (unlikely(__pyx_t_2 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 150, __pyx_L1_error)
     (__pyx_v_values[__pyx_v_i]) = __pyx_t_2;
 
-    /* "hand_rank_monte_carlo.pyx":210
+    /* "hand_rank_monte_carlo.pyx":151
  *     for i in range(5):
- *         values[i] = card_value(combined_hand[i][1])
- *         suits[i] = combined_hand[i][0]             # <<<<<<<<<<<<<<
+ *         values[i] = card_value(hand[i][1])
+ *         suits[i] = hand[i][0]             # <<<<<<<<<<<<<<
  *         val_count[values[i]] += 1
  * 
  */
-    (__pyx_v_suits[__pyx_v_i]) = ((__pyx_v_combined_hand[__pyx_v_i])[0]);
+    (__pyx_v_suits[__pyx_v_i]) = ((__pyx_v_hand[__pyx_v_i])[0]);
 
-    /* "hand_rank_monte_carlo.pyx":211
- *         values[i] = card_value(combined_hand[i][1])
- *         suits[i] = combined_hand[i][0]
+    /* "hand_rank_monte_carlo.pyx":152
+ *         values[i] = card_value(hand[i][1])
+ *         suits[i] = hand[i][0]
  *         val_count[values[i]] += 1             # <<<<<<<<<<<<<<
  * 
  *     # Check for flush
@@ -5831,7 +5029,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
     (__pyx_v_val_count[__pyx_t_2]) = ((__pyx_v_val_count[__pyx_t_2]) + 1);
   }
 
-  /* "hand_rank_monte_carlo.pyx":214
+  /* "hand_rank_monte_carlo.pyx":155
  * 
  *     # Check for flush
  *     flush = (suits[0] == suits[1] == suits[2] == suits[3] == suits[4])             # <<<<<<<<<<<<<<
@@ -5850,16 +5048,16 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   }
   __pyx_v_flush = __pyx_t_3;
 
-  /* "hand_rank_monte_carlo.pyx":217
+  /* "hand_rank_monte_carlo.pyx":158
  * 
  *     # Check for straight
  *     values.sort()             # <<<<<<<<<<<<<<
  *     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and
  *                 values[2] + 1 == values[3] and values[3] + 1 == values[4])
  */
-  __pyx_t_5 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 158, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_sort); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_sort); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 158, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_5 = NULL;
@@ -5880,13 +5078,13 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
     PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
     __pyx_t_4 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_1, 0+__pyx_t_1);
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 217, __pyx_L1_error)
+    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 158, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":218
+  /* "hand_rank_monte_carlo.pyx":159
  *     # Check for straight
  *     values.sort()
  *     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and             # <<<<<<<<<<<<<<
@@ -5897,16 +5095,16 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   if (__pyx_t_3) {
   } else {
     __pyx_t_1 = __pyx_t_3;
-    goto __pyx_L11_bool_binop_done;
+    goto __pyx_L7_bool_binop_done;
   }
   __pyx_t_3 = (((__pyx_v_values[1]) + 1) == (__pyx_v_values[2]));
   if (__pyx_t_3) {
   } else {
     __pyx_t_1 = __pyx_t_3;
-    goto __pyx_L11_bool_binop_done;
+    goto __pyx_L7_bool_binop_done;
   }
 
-  /* "hand_rank_monte_carlo.pyx":219
+  /* "hand_rank_monte_carlo.pyx":160
  *     values.sort()
  *     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and
  *                 values[2] + 1 == values[3] and values[3] + 1 == values[4])             # <<<<<<<<<<<<<<
@@ -5917,14 +5115,14 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   if (__pyx_t_3) {
   } else {
     __pyx_t_1 = __pyx_t_3;
-    goto __pyx_L11_bool_binop_done;
+    goto __pyx_L7_bool_binop_done;
   }
   __pyx_t_3 = (((__pyx_v_values[3]) + 1) == (__pyx_v_values[4]));
   __pyx_t_1 = __pyx_t_3;
-  __pyx_L11_bool_binop_done:;
+  __pyx_L7_bool_binop_done:;
   __pyx_v_straight = __pyx_t_1;
 
-  /* "hand_rank_monte_carlo.pyx":222
+  /* "hand_rank_monte_carlo.pyx":163
  * 
  *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
  *     if not straight and values[4] == 14:  # Checking if Ace is high             # <<<<<<<<<<<<<<
@@ -5935,14 +5133,14 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   if (__pyx_t_7) {
   } else {
     __pyx_t_3 = __pyx_t_7;
-    goto __pyx_L16_bool_binop_done;
+    goto __pyx_L12_bool_binop_done;
   }
   __pyx_t_7 = ((__pyx_v_values[4]) == 14);
   __pyx_t_3 = __pyx_t_7;
-  __pyx_L16_bool_binop_done:;
+  __pyx_L12_bool_binop_done:;
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":223
+    /* "hand_rank_monte_carlo.pyx":164
  *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
  *     if not straight and values[4] == 14:  # Checking if Ace is high
  *         straight = (values[0] == 2 and values[1] == 3 and values[2] == 4 and values[3] == 5)             # <<<<<<<<<<<<<<
@@ -5953,26 +5151,26 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
     if (__pyx_t_3) {
     } else {
       __pyx_t_1 = __pyx_t_3;
-      goto __pyx_L18_bool_binop_done;
+      goto __pyx_L14_bool_binop_done;
     }
     __pyx_t_3 = ((__pyx_v_values[1]) == 3);
     if (__pyx_t_3) {
     } else {
       __pyx_t_1 = __pyx_t_3;
-      goto __pyx_L18_bool_binop_done;
+      goto __pyx_L14_bool_binop_done;
     }
     __pyx_t_3 = ((__pyx_v_values[2]) == 4);
     if (__pyx_t_3) {
     } else {
       __pyx_t_1 = __pyx_t_3;
-      goto __pyx_L18_bool_binop_done;
+      goto __pyx_L14_bool_binop_done;
     }
     __pyx_t_3 = ((__pyx_v_values[3]) == 5);
     __pyx_t_1 = __pyx_t_3;
-    __pyx_L18_bool_binop_done:;
+    __pyx_L14_bool_binop_done:;
     __pyx_v_straight = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":222
+    /* "hand_rank_monte_carlo.pyx":163
  * 
  *     # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
  *     if not straight and values[4] == 14:  # Checking if Ace is high             # <<<<<<<<<<<<<<
@@ -5981,7 +5179,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":226
+  /* "hand_rank_monte_carlo.pyx":167
  * 
  *     # Determine hand rank
  *     if straight and flush:             # <<<<<<<<<<<<<<
@@ -5992,14 +5190,14 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   if (__pyx_t_7) {
   } else {
     __pyx_t_3 = __pyx_t_7;
-    goto __pyx_L23_bool_binop_done;
+    goto __pyx_L19_bool_binop_done;
   }
   __pyx_t_7 = (__pyx_v_flush != 0);
   __pyx_t_3 = __pyx_t_7;
-  __pyx_L23_bool_binop_done:;
+  __pyx_L19_bool_binop_done:;
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":227
+    /* "hand_rank_monte_carlo.pyx":168
  *     # Determine hand rank
  *     if straight and flush:
  *         return (8, tuple(values))  # Straight flush             # <<<<<<<<<<<<<<
@@ -6007,24 +5205,24 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         four_kind = get_n_of_a_kind(val_count, 4)
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 168, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 168, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 168, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_int_8);
     __Pyx_GIVEREF(__pyx_int_8);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_8)) __PYX_ERR(0, 227, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_8)) __PYX_ERR(0, 168, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_6)) __PYX_ERR(0, 227, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_6)) __PYX_ERR(0, 168, __pyx_L1_error);
     __pyx_t_6 = 0;
     __pyx_r = ((PyObject*)__pyx_t_4);
     __pyx_t_4 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":226
+    /* "hand_rank_monte_carlo.pyx":167
  * 
  *     # Determine hand rank
  *     if straight and flush:             # <<<<<<<<<<<<<<
@@ -6033,28 +5231,28 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":228
+  /* "hand_rank_monte_carlo.pyx":169
  *     if straight and flush:
  *         return (8, tuple(values))  # Straight flush
  *     elif has_n_of_a_kind(val_count, 4):             # <<<<<<<<<<<<<<
  *         four_kind = get_n_of_a_kind(val_count, 4)
  *         kicker = max([v for v in values if v != four_kind])
  */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 4); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 228, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 4); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 169, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_1 != 0);
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":229
+    /* "hand_rank_monte_carlo.pyx":170
  *         return (8, tuple(values))  # Straight flush
  *     elif has_n_of_a_kind(val_count, 4):
  *         four_kind = get_n_of_a_kind(val_count, 4)             # <<<<<<<<<<<<<<
  *         kicker = max([v for v in values if v != four_kind])
  *         return (7, (four_kind, kicker))  # Four of a kind
  */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 4); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 229, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 4); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 170, __pyx_L1_error)
     __pyx_v_four_kind = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":230
+    /* "hand_rank_monte_carlo.pyx":171
  *     elif has_n_of_a_kind(val_count, 4):
  *         four_kind = get_n_of_a_kind(val_count, 4)
  *         kicker = max([v for v in values if v != four_kind])             # <<<<<<<<<<<<<<
@@ -6062,28 +5260,28 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
  */
     { /* enter inner scope */
-      __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 230, __pyx_L1_error)
+      __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 171, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __pyx_t_9 = (__pyx_v_values + 5);
       for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
         __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr4__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_3 = (__pyx_8genexpr4__pyx_v_v != __pyx_v_four_kind);
+        __pyx_8genexpr2__pyx_v_v = (__pyx_t_8[0]);
+        __pyx_t_3 = (__pyx_8genexpr2__pyx_v_v != __pyx_v_four_kind);
         if (__pyx_t_3) {
-          __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_8genexpr4__pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 230, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_8genexpr2__pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 171, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_4, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 230, __pyx_L1_error)
+          if (unlikely(__Pyx_ListComp_Append(__pyx_t_4, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 171, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         }
       }
     } /* exit inner scope */
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 230, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 171, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_v_kicker = __pyx_t_6;
     __pyx_t_6 = 0;
 
-    /* "hand_rank_monte_carlo.pyx":231
+    /* "hand_rank_monte_carlo.pyx":172
  *         four_kind = get_n_of_a_kind(val_count, 4)
  *         kicker = max([v for v in values if v != four_kind])
  *         return (7, (four_kind, kicker))  # Four of a kind             # <<<<<<<<<<<<<<
@@ -6091,29 +5289,29 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         three_kind = get_n_of_a_kind(val_count, 3)
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_four_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 231, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_four_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 172, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 231, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 172, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 231, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 172, __pyx_L1_error);
     __Pyx_INCREF(__pyx_v_kicker);
     __Pyx_GIVEREF(__pyx_v_kicker);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_v_kicker)) __PYX_ERR(0, 231, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_v_kicker)) __PYX_ERR(0, 172, __pyx_L1_error);
     __pyx_t_6 = 0;
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 231, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 172, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_7);
     __Pyx_GIVEREF(__pyx_int_7);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_7)) __PYX_ERR(0, 231, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_7)) __PYX_ERR(0, 172, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_4)) __PYX_ERR(0, 231, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_4)) __PYX_ERR(0, 172, __pyx_L1_error);
     __pyx_t_4 = 0;
     __pyx_r = ((PyObject*)__pyx_t_6);
     __pyx_t_6 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":228
+    /* "hand_rank_monte_carlo.pyx":169
  *     if straight and flush:
  *         return (8, tuple(values))  # Straight flush
  *     elif has_n_of_a_kind(val_count, 4):             # <<<<<<<<<<<<<<
@@ -6122,47 +5320,47 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":232
+  /* "hand_rank_monte_carlo.pyx":173
  *         kicker = max([v for v in values if v != four_kind])
  *         return (7, (four_kind, kicker))  # Four of a kind
  *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
  *         three_kind = get_n_of_a_kind(val_count, 3)
  *         pair = get_n_of_a_kind(val_count, 2)
  */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_7 = (__pyx_t_1 != 0);
   if (__pyx_t_7) {
   } else {
     __pyx_t_3 = __pyx_t_7;
-    goto __pyx_L28_bool_binop_done;
+    goto __pyx_L24_bool_binop_done;
   }
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_7 = (__pyx_t_1 != 0);
   __pyx_t_3 = __pyx_t_7;
-  __pyx_L28_bool_binop_done:;
+  __pyx_L24_bool_binop_done:;
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":233
+    /* "hand_rank_monte_carlo.pyx":174
  *         return (7, (four_kind, kicker))  # Four of a kind
  *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
  *         three_kind = get_n_of_a_kind(val_count, 3)             # <<<<<<<<<<<<<<
  *         pair = get_n_of_a_kind(val_count, 2)
  *         return (6, (three_kind, pair))  # Full house
  */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 233, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L1_error)
     __pyx_v_three_kind = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":234
+    /* "hand_rank_monte_carlo.pyx":175
  *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):
  *         three_kind = get_n_of_a_kind(val_count, 3)
  *         pair = get_n_of_a_kind(val_count, 2)             # <<<<<<<<<<<<<<
  *         return (6, (three_kind, pair))  # Full house
  *     elif flush:
  */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 234, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L1_error)
     __pyx_v_pair = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":235
+    /* "hand_rank_monte_carlo.pyx":176
  *         three_kind = get_n_of_a_kind(val_count, 3)
  *         pair = get_n_of_a_kind(val_count, 2)
  *         return (6, (three_kind, pair))  # Full house             # <<<<<<<<<<<<<<
@@ -6170,31 +5368,31 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         return (5, tuple(values))  # Flush
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_three_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_three_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_pair); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_pair); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6)) __PYX_ERR(0, 235, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 235, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 176, __pyx_L1_error);
     __pyx_t_6 = 0;
     __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 176, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_int_6);
     __Pyx_GIVEREF(__pyx_int_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_6)) __PYX_ERR(0, 235, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_6)) __PYX_ERR(0, 176, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 176, __pyx_L1_error);
     __pyx_t_5 = 0;
     __pyx_r = ((PyObject*)__pyx_t_4);
     __pyx_t_4 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":232
+    /* "hand_rank_monte_carlo.pyx":173
  *         kicker = max([v for v in values if v != four_kind])
  *         return (7, (four_kind, kicker))  # Four of a kind
  *     elif has_n_of_a_kind(val_count, 3) and has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
@@ -6203,7 +5401,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":236
+  /* "hand_rank_monte_carlo.pyx":177
  *         pair = get_n_of_a_kind(val_count, 2)
  *         return (6, (three_kind, pair))  # Full house
  *     elif flush:             # <<<<<<<<<<<<<<
@@ -6213,7 +5411,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   __pyx_t_3 = (__pyx_v_flush != 0);
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":237
+    /* "hand_rank_monte_carlo.pyx":178
  *         return (6, (three_kind, pair))  # Full house
  *     elif flush:
  *         return (5, tuple(values))  # Flush             # <<<<<<<<<<<<<<
@@ -6221,24 +5419,24 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         return (4, tuple(values))  # Straight
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 178, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 178, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 178, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_int_5);
     __Pyx_GIVEREF(__pyx_int_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_5)) __PYX_ERR(0, 237, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_5)) __PYX_ERR(0, 178, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 237, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 178, __pyx_L1_error);
     __pyx_t_5 = 0;
     __pyx_r = ((PyObject*)__pyx_t_4);
     __pyx_t_4 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":236
+    /* "hand_rank_monte_carlo.pyx":177
  *         pair = get_n_of_a_kind(val_count, 2)
  *         return (6, (three_kind, pair))  # Full house
  *     elif flush:             # <<<<<<<<<<<<<<
@@ -6247,7 +5445,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":238
+  /* "hand_rank_monte_carlo.pyx":179
  *     elif flush:
  *         return (5, tuple(values))  # Flush
  *     elif straight:             # <<<<<<<<<<<<<<
@@ -6257,7 +5455,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   __pyx_t_3 = (__pyx_v_straight != 0);
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":239
+    /* "hand_rank_monte_carlo.pyx":180
  *         return (5, tuple(values))  # Flush
  *     elif straight:
  *         return (4, tuple(values))  # Straight             # <<<<<<<<<<<<<<
@@ -6265,24 +5463,24 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         three_kind = get_n_of_a_kind(val_count, 3)
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 180, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 239, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 180, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 180, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_int_4);
     __Pyx_GIVEREF(__pyx_int_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_4)) __PYX_ERR(0, 239, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_int_4)) __PYX_ERR(0, 180, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 239, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_5)) __PYX_ERR(0, 180, __pyx_L1_error);
     __pyx_t_5 = 0;
     __pyx_r = ((PyObject*)__pyx_t_4);
     __pyx_t_4 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":238
+    /* "hand_rank_monte_carlo.pyx":179
  *     elif flush:
  *         return (5, tuple(values))  # Flush
  *     elif straight:             # <<<<<<<<<<<<<<
@@ -6291,28 +5489,28 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":240
+  /* "hand_rank_monte_carlo.pyx":181
  *     elif straight:
  *         return (4, tuple(values))  # Straight
  *     elif has_n_of_a_kind(val_count, 3):             # <<<<<<<<<<<<<<
  *         three_kind = get_n_of_a_kind(val_count, 3)
  *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
  */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 240, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 181, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_1 != 0);
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":241
+    /* "hand_rank_monte_carlo.pyx":182
  *         return (4, tuple(values))  # Straight
  *     elif has_n_of_a_kind(val_count, 3):
  *         three_kind = get_n_of_a_kind(val_count, 3)             # <<<<<<<<<<<<<<
  *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
  *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
  */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 241, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 3); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 182, __pyx_L1_error)
     __pyx_v_three_kind = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":242
+    /* "hand_rank_monte_carlo.pyx":183
  *     elif has_n_of_a_kind(val_count, 3):
  *         three_kind = get_n_of_a_kind(val_count, 3)
  *         kicker = sorted([v for v in values if v != three_kind], reverse=True)             # <<<<<<<<<<<<<<
@@ -6320,37 +5518,37 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *     elif count_pairs(val_count) >= 2:
  */
     { /* enter inner scope */
-      __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 242, __pyx_L1_error)
+      __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 183, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __pyx_t_9 = (__pyx_v_values + 5);
       for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
         __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr5__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_3 = (__pyx_8genexpr5__pyx_v_v != __pyx_v_three_kind);
+        __pyx_8genexpr3__pyx_v_v = (__pyx_t_8[0]);
+        __pyx_t_3 = (__pyx_8genexpr3__pyx_v_v != __pyx_v_three_kind);
         if (__pyx_t_3) {
-          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr5__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 242, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr3__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 183, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_4, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 242, __pyx_L1_error)
+          if (unlikely(__Pyx_ListComp_Append(__pyx_t_4, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 183, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         }
       }
     } /* exit inner scope */
-    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 242, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 183, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_4)) __PYX_ERR(0, 242, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_4)) __PYX_ERR(0, 183, __pyx_L1_error);
     __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 242, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 183, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 242, __pyx_L1_error)
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_5, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 242, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 183, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_5, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 183, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_v_kicker = __pyx_t_6;
     __pyx_t_6 = 0;
 
-    /* "hand_rank_monte_carlo.pyx":243
+    /* "hand_rank_monte_carlo.pyx":184
  *         three_kind = get_n_of_a_kind(val_count, 3)
  *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
  *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind             # <<<<<<<<<<<<<<
@@ -6358,32 +5556,32 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         pairs = get_pairs(val_count)
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_three_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_three_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 243, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 184, __pyx_L1_error);
     __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PySequence_Tuple(__pyx_v_kicker); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PySequence_Tuple(__pyx_v_kicker); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 243, __pyx_L1_error)
+    __pyx_t_5 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_3);
     __Pyx_GIVEREF(__pyx_int_3);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_3)) __PYX_ERR(0, 243, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_3)) __PYX_ERR(0, 184, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_5)) __PYX_ERR(0, 243, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_5)) __PYX_ERR(0, 184, __pyx_L1_error);
     __pyx_t_5 = 0;
     __pyx_r = ((PyObject*)__pyx_t_6);
     __pyx_t_6 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":240
+    /* "hand_rank_monte_carlo.pyx":181
  *     elif straight:
  *         return (4, tuple(values))  # Straight
  *     elif has_n_of_a_kind(val_count, 3):             # <<<<<<<<<<<<<<
@@ -6392,30 +5590,30 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":244
+  /* "hand_rank_monte_carlo.pyx":185
  *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
  *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
  *     elif count_pairs(val_count) >= 2:             # <<<<<<<<<<<<<<
  *         pairs = get_pairs(val_count)
  *         kicker = max([v for v in values if v not in pairs])
  */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_count_pairs(__pyx_v_val_count); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 244, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_count_pairs(__pyx_v_val_count); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 185, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_1 >= 2);
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":245
+    /* "hand_rank_monte_carlo.pyx":186
  *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
  *     elif count_pairs(val_count) >= 2:
  *         pairs = get_pairs(val_count)             # <<<<<<<<<<<<<<
  *         kicker = max([v for v in values if v not in pairs])
  *         return (2, tuple(pairs) + (kicker,))  # Two pair
  */
-    __pyx_t_6 = __pyx_f_21hand_rank_monte_carlo_get_pairs(__pyx_v_val_count); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 245, __pyx_L1_error)
+    __pyx_t_6 = __pyx_f_21hand_rank_monte_carlo_get_pairs(__pyx_v_val_count); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 186, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_v_pairs = ((PyObject*)__pyx_t_6);
     __pyx_t_6 = 0;
 
-    /* "hand_rank_monte_carlo.pyx":246
+    /* "hand_rank_monte_carlo.pyx":187
  *     elif count_pairs(val_count) >= 2:
  *         pairs = get_pairs(val_count)
  *         kicker = max([v for v in values if v not in pairs])             # <<<<<<<<<<<<<<
@@ -6423,31 +5621,31 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *     elif has_n_of_a_kind(val_count, 2):
  */
     { /* enter inner scope */
-      __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 246, __pyx_L1_error)
+      __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 187, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __pyx_t_9 = (__pyx_v_values + 5);
       for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
         __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr6__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr6__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 246, __pyx_L1_error)
+        __pyx_8genexpr4__pyx_v_v = (__pyx_t_8[0]);
+        __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr4__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 187, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
-        __pyx_t_3 = (__Pyx_PySequence_ContainsTF(__pyx_t_5, __pyx_v_pairs, Py_NE)); if (unlikely((__pyx_t_3 < 0))) __PYX_ERR(0, 246, __pyx_L1_error)
+        __pyx_t_3 = (__Pyx_PySequence_ContainsTF(__pyx_t_5, __pyx_v_pairs, Py_NE)); if (unlikely((__pyx_t_3 < 0))) __PYX_ERR(0, 187, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         if (__pyx_t_3) {
-          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr6__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 246, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_8genexpr4__pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 187, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_6, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 246, __pyx_L1_error)
+          if (unlikely(__Pyx_ListComp_Append(__pyx_t_6, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 187, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         }
       }
     } /* exit inner scope */
-    __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 246, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __pyx_v_kicker = __pyx_t_5;
     __pyx_t_5 = 0;
 
-    /* "hand_rank_monte_carlo.pyx":247
+    /* "hand_rank_monte_carlo.pyx":188
  *         pairs = get_pairs(val_count)
  *         kicker = max([v for v in values if v not in pairs])
  *         return (2, tuple(pairs) + (kicker,))  # Two pair             # <<<<<<<<<<<<<<
@@ -6457,32 +5655,32 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
     __Pyx_XDECREF(__pyx_r);
     if (unlikely(__pyx_v_pairs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-      __PYX_ERR(0, 247, __pyx_L1_error)
+      __PYX_ERR(0, 188, __pyx_L1_error)
     }
-    __pyx_t_5 = PyList_AsTuple(__pyx_v_pairs); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 247, __pyx_L1_error)
+    __pyx_t_5 = PyList_AsTuple(__pyx_v_pairs); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_v_kicker);
     __Pyx_GIVEREF(__pyx_v_kicker);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_kicker)) __PYX_ERR(0, 247, __pyx_L1_error);
-    __pyx_t_4 = PyNumber_Add(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 247, __pyx_L1_error)
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_kicker)) __PYX_ERR(0, 188, __pyx_L1_error);
+    __pyx_t_4 = PyNumber_Add(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 247, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 188, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_2);
     __Pyx_GIVEREF(__pyx_int_2);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_2)) __PYX_ERR(0, 247, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_int_2)) __PYX_ERR(0, 188, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_4)) __PYX_ERR(0, 247, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_4)) __PYX_ERR(0, 188, __pyx_L1_error);
     __pyx_t_4 = 0;
     __pyx_r = ((PyObject*)__pyx_t_6);
     __pyx_t_6 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":244
+    /* "hand_rank_monte_carlo.pyx":185
  *         kicker = sorted([v for v in values if v != three_kind], reverse=True)
  *         return (3, (three_kind,) + tuple(kicker))  # Three of a kind
  *     elif count_pairs(val_count) >= 2:             # <<<<<<<<<<<<<<
@@ -6491,28 +5689,28 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":248
+  /* "hand_rank_monte_carlo.pyx":189
  *         kicker = max([v for v in values if v not in pairs])
  *         return (2, tuple(pairs) + (kicker,))  # Two pair
  *     elif has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
  *         pair = get_n_of_a_kind(val_count, 2)
  *         kicker = sorted([v for v in values if v != pair], reverse=True)
  */
-  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 248, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 189, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_1 != 0);
   if (__pyx_t_3) {
 
-    /* "hand_rank_monte_carlo.pyx":249
+    /* "hand_rank_monte_carlo.pyx":190
  *         return (2, tuple(pairs) + (kicker,))  # Two pair
  *     elif has_n_of_a_kind(val_count, 2):
  *         pair = get_n_of_a_kind(val_count, 2)             # <<<<<<<<<<<<<<
  *         kicker = sorted([v for v in values if v != pair], reverse=True)
  *         return (1, (pair,) + tuple(kicker))  # One pair
  */
-    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 249, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(__pyx_v_val_count, 2); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 190, __pyx_L1_error)
     __pyx_v_pair = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":250
+    /* "hand_rank_monte_carlo.pyx":191
  *     elif has_n_of_a_kind(val_count, 2):
  *         pair = get_n_of_a_kind(val_count, 2)
  *         kicker = sorted([v for v in values if v != pair], reverse=True)             # <<<<<<<<<<<<<<
@@ -6520,37 +5718,37 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *     else:
  */
     { /* enter inner scope */
-      __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 250, __pyx_L1_error)
+      __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 191, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __pyx_t_9 = (__pyx_v_values + 5);
       for (__pyx_t_10 = __pyx_v_values; __pyx_t_10 < __pyx_t_9; __pyx_t_10++) {
         __pyx_t_8 = __pyx_t_10;
-        __pyx_8genexpr7__pyx_v_v = (__pyx_t_8[0]);
-        __pyx_t_3 = (__pyx_8genexpr7__pyx_v_v != __pyx_v_pair);
+        __pyx_8genexpr5__pyx_v_v = (__pyx_t_8[0]);
+        __pyx_t_3 = (__pyx_8genexpr5__pyx_v_v != __pyx_v_pair);
         if (__pyx_t_3) {
-          __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_8genexpr7__pyx_v_v); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 250, __pyx_L1_error)
+          __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_8genexpr5__pyx_v_v); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 191, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
-          if (unlikely(__Pyx_ListComp_Append(__pyx_t_6, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 250, __pyx_L1_error)
+          if (unlikely(__Pyx_ListComp_Append(__pyx_t_6, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 191, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
         }
       }
     } /* exit inner scope */
-    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 250, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 191, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_6);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 250, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_6)) __PYX_ERR(0, 191, __pyx_L1_error);
     __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 250, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 191, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 250, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 250, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 191, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 191, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __pyx_v_kicker = __pyx_t_5;
     __pyx_t_5 = 0;
 
-    /* "hand_rank_monte_carlo.pyx":251
+    /* "hand_rank_monte_carlo.pyx":192
  *         pair = get_n_of_a_kind(val_count, 2)
  *         kicker = sorted([v for v in values if v != pair], reverse=True)
  *         return (1, (pair,) + tuple(kicker))  # One pair             # <<<<<<<<<<<<<<
@@ -6558,32 +5756,32 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  *         return (0, tuple(values))  # High card
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_pair); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 251, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_pair); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 192, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 251, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 192, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_GIVEREF(__pyx_t_5);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5)) __PYX_ERR(0, 251, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5)) __PYX_ERR(0, 192, __pyx_L1_error);
     __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_v_kicker); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 251, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PySequence_Tuple(__pyx_v_kicker); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 192, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = PyNumber_Add(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 251, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Add(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 192, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 251, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 192, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_INCREF(__pyx_int_1);
     __Pyx_GIVEREF(__pyx_int_1);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_int_1)) __PYX_ERR(0, 251, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_int_1)) __PYX_ERR(0, 192, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 251, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 192, __pyx_L1_error);
     __pyx_t_4 = 0;
     __pyx_r = ((PyObject*)__pyx_t_5);
     __pyx_t_5 = 0;
     goto __pyx_L0;
 
-    /* "hand_rank_monte_carlo.pyx":248
+    /* "hand_rank_monte_carlo.pyx":189
  *         kicker = max([v for v in values if v not in pairs])
  *         return (2, tuple(pairs) + (kicker,))  # Two pair
  *     elif has_n_of_a_kind(val_count, 2):             # <<<<<<<<<<<<<<
@@ -6592,7 +5790,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   }
 
-  /* "hand_rank_monte_carlo.pyx":253
+  /* "hand_rank_monte_carlo.pyx":194
  *         return (1, (pair,) + tuple(kicker))  # One pair
  *     else:
  *         return (0, tuple(values))  # High card             # <<<<<<<<<<<<<<
@@ -6601,28 +5799,28 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_5 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 253, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_carray_to_py_int(__pyx_v_values, 5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 194, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PySequence_Tuple(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 253, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PySequence_Tuple(__pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 194, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 253, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 194, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_INCREF(__pyx_int_0);
     __Pyx_GIVEREF(__pyx_int_0);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_int_0)) __PYX_ERR(0, 253, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_int_0)) __PYX_ERR(0, 194, __pyx_L1_error);
     __Pyx_GIVEREF(__pyx_t_4);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 253, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4)) __PYX_ERR(0, 194, __pyx_L1_error);
     __pyx_t_4 = 0;
     __pyx_r = ((PyObject*)__pyx_t_5);
     __pyx_t_5 = 0;
     goto __pyx_L0;
   }
 
-  /* "hand_rank_monte_carlo.pyx":188
+  /* "hand_rank_monte_carlo.pyx":138
  *     return wins / float(num_simulations)
  * 
- * cdef tuple hand_rank(char[7][2] hand, char[5][2] community):             # <<<<<<<<<<<<<<
+ * cdef tuple single_hand_rank(char hand[5][2]):             # <<<<<<<<<<<<<<
  *     cdef int values[5]
  *     cdef char suits[5]
  */
@@ -6632,7 +5830,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("hand_rank_monte_carlo.hand_rank", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hand_rank_monte_carlo.single_hand_rank", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_kicker);
@@ -6642,7 +5840,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_hand_rank(char (*__pyx_v_hand)[
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":255
+/* "hand_rank_monte_carlo.pyx":196
  *         return (0, tuple(values))  # High card
  * 
  * cdef int card_value(char rank):             # <<<<<<<<<<<<<<
@@ -6662,103 +5860,103 @@ static int __pyx_f_21hand_rank_monte_carlo_card_value(char __pyx_v_rank) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("card_value", 1);
 
-  /* "hand_rank_monte_carlo.pyx":258
+  /* "hand_rank_monte_carlo.pyx":199
  *     """Convert card rank characters to numerical values for sorting and comparison."""
  *     return {
  *         b'2'[0]: 2, b'3'[0]: 3, b'4'[0]: 4, b'5'[0]: 5, b'6'[0]: 6,             # <<<<<<<<<<<<<<
  *         b'7'[0]: 7, b'8'[0]: 8, b'9'[0]: 9, b'T'[0]: 10,
  *         b'J'[0]: 11, b'Q'[0]: 12, b'K'[0]: 13, b'A'[0]: 14
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(13); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(13); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_2) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_2) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_3, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_3, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_3) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_3) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_4) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_4) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_5, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_5, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_5) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_5) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_6, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_6, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_6) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_6) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":259
+  /* "hand_rank_monte_carlo.pyx":200
  *     return {
  *         b'2'[0]: 2, b'3'[0]: 3, b'4'[0]: 4, b'5'[0]: 5, b'6'[0]: 6,
  *         b'7'[0]: 7, b'8'[0]: 8, b'9'[0]: 9, b'T'[0]: 10,             # <<<<<<<<<<<<<<
  *         b'J'[0]: 11, b'Q'[0]: 12, b'K'[0]: 13, b'A'[0]: 14
  *     }.get(rank, -1)
  */
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 259, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_7) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_7) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_8, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 259, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_8, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_8) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_8) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_9, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 259, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_kp_b_9, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_9) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_9) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_T, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 259, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_T, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_10) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_10) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":260
+  /* "hand_rank_monte_carlo.pyx":201
  *         b'2'[0]: 2, b'3'[0]: 3, b'4'[0]: 4, b'5'[0]: 5, b'6'[0]: 6,
  *         b'7'[0]: 7, b'8'[0]: 8, b'9'[0]: 9, b'T'[0]: 10,
  *         b'J'[0]: 11, b'Q'[0]: 12, b'K'[0]: 13, b'A'[0]: 14             # <<<<<<<<<<<<<<
  *     }.get(rank, -1)
  * 
  */
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_J, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 260, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_J, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 201, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_11) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_11) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_Q, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 260, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_Q, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 201, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_12) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_12) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_K, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 260, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_K, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 201, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_13) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_13) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_A, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 260, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_n_b_A, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 201, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_14) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_t_2, __pyx_int_14) < 0) __PYX_ERR(0, 199, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":261
+  /* "hand_rank_monte_carlo.pyx":202
  *         b'7'[0]: 7, b'8'[0]: 8, b'9'[0]: 9, b'T'[0]: 10,
  *         b'J'[0]: 11, b'Q'[0]: 12, b'K'[0]: 13, b'A'[0]: 14
  *     }.get(rank, -1)             # <<<<<<<<<<<<<<
  * 
- * cdef int has_n_of_a_kind(int[15] val_count, int n):
+ * 
  */
-  __pyx_t_2 = __Pyx_PyInt_From_char(__pyx_v_rank); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_char(__pyx_v_rank); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 202, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_t_1, __pyx_t_2, __pyx_int_neg_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_GetItemDefault(__pyx_t_1, __pyx_t_2, __pyx_int_neg_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 202, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 202, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_r = __pyx_t_4;
   goto __pyx_L0;
 
-  /* "hand_rank_monte_carlo.pyx":255
+  /* "hand_rank_monte_carlo.pyx":196
  *         return (0, tuple(values))  # High card
  * 
  * cdef int card_value(char rank):             # <<<<<<<<<<<<<<
@@ -6778,8 +5976,8 @@ static int __pyx_f_21hand_rank_monte_carlo_card_value(char __pyx_v_rank) {
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":263
- *     }.get(rank, -1)
+/* "hand_rank_monte_carlo.pyx":205
+ * 
  * 
  * cdef int has_n_of_a_kind(int[15] val_count, int n):             # <<<<<<<<<<<<<<
  *     """Helper function to check if there is n of a kind."""
@@ -6792,7 +5990,7 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
   long __pyx_t_1;
   int __pyx_t_2;
 
-  /* "hand_rank_monte_carlo.pyx":265
+  /* "hand_rank_monte_carlo.pyx":207
  * cdef int has_n_of_a_kind(int[15] val_count, int n):
  *     """Helper function to check if there is n of a kind."""
  *     for i in range(15):             # <<<<<<<<<<<<<<
@@ -6802,7 +6000,7 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
   for (__pyx_t_1 = 0; __pyx_t_1 < 15; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":266
+    /* "hand_rank_monte_carlo.pyx":208
  *     """Helper function to check if there is n of a kind."""
  *     for i in range(15):
  *         if val_count[i] == n:             # <<<<<<<<<<<<<<
@@ -6812,7 +6010,7 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
     __pyx_t_2 = ((__pyx_v_val_count[__pyx_v_i]) == __pyx_v_n);
     if (__pyx_t_2) {
 
-      /* "hand_rank_monte_carlo.pyx":267
+      /* "hand_rank_monte_carlo.pyx":209
  *     for i in range(15):
  *         if val_count[i] == n:
  *             return 1             # <<<<<<<<<<<<<<
@@ -6822,7 +6020,7 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "hand_rank_monte_carlo.pyx":266
+      /* "hand_rank_monte_carlo.pyx":208
  *     """Helper function to check if there is n of a kind."""
  *     for i in range(15):
  *         if val_count[i] == n:             # <<<<<<<<<<<<<<
@@ -6832,7 +6030,7 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
     }
   }
 
-  /* "hand_rank_monte_carlo.pyx":268
+  /* "hand_rank_monte_carlo.pyx":210
  *         if val_count[i] == n:
  *             return 1
  *     return 0             # <<<<<<<<<<<<<<
@@ -6842,8 +6040,8 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "hand_rank_monte_carlo.pyx":263
- *     }.get(rank, -1)
+  /* "hand_rank_monte_carlo.pyx":205
+ * 
  * 
  * cdef int has_n_of_a_kind(int[15] val_count, int n):             # <<<<<<<<<<<<<<
  *     """Helper function to check if there is n of a kind."""
@@ -6855,7 +6053,7 @@ static int __pyx_f_21hand_rank_monte_carlo_has_n_of_a_kind(int *__pyx_v_val_coun
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":270
+/* "hand_rank_monte_carlo.pyx":212
  *     return 0
  * 
  * cdef int get_n_of_a_kind(int[15] val_count, int n):             # <<<<<<<<<<<<<<
@@ -6869,7 +6067,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
   long __pyx_t_1;
   int __pyx_t_2;
 
-  /* "hand_rank_monte_carlo.pyx":272
+  /* "hand_rank_monte_carlo.pyx":214
  * cdef int get_n_of_a_kind(int[15] val_count, int n):
  *     """Helper function to get the rank of n of a kind."""
  *     for i in range(15):             # <<<<<<<<<<<<<<
@@ -6879,7 +6077,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
   for (__pyx_t_1 = 0; __pyx_t_1 < 15; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":273
+    /* "hand_rank_monte_carlo.pyx":215
  *     """Helper function to get the rank of n of a kind."""
  *     for i in range(15):
  *         if val_count[i] == n:             # <<<<<<<<<<<<<<
@@ -6889,7 +6087,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
     __pyx_t_2 = ((__pyx_v_val_count[__pyx_v_i]) == __pyx_v_n);
     if (__pyx_t_2) {
 
-      /* "hand_rank_monte_carlo.pyx":274
+      /* "hand_rank_monte_carlo.pyx":216
  *     for i in range(15):
  *         if val_count[i] == n:
  *             return i             # <<<<<<<<<<<<<<
@@ -6899,7 +6097,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
       __pyx_r = __pyx_v_i;
       goto __pyx_L0;
 
-      /* "hand_rank_monte_carlo.pyx":273
+      /* "hand_rank_monte_carlo.pyx":215
  *     """Helper function to get the rank of n of a kind."""
  *     for i in range(15):
  *         if val_count[i] == n:             # <<<<<<<<<<<<<<
@@ -6909,7 +6107,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
     }
   }
 
-  /* "hand_rank_monte_carlo.pyx":275
+  /* "hand_rank_monte_carlo.pyx":217
  *         if val_count[i] == n:
  *             return i
  *     return -1  # Should never be reached             # <<<<<<<<<<<<<<
@@ -6919,7 +6117,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
   __pyx_r = -1;
   goto __pyx_L0;
 
-  /* "hand_rank_monte_carlo.pyx":270
+  /* "hand_rank_monte_carlo.pyx":212
  *     return 0
  * 
  * cdef int get_n_of_a_kind(int[15] val_count, int n):             # <<<<<<<<<<<<<<
@@ -6932,7 +6130,7 @@ static int __pyx_f_21hand_rank_monte_carlo_get_n_of_a_kind(int *__pyx_v_val_coun
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":277
+/* "hand_rank_monte_carlo.pyx":219
  *     return -1  # Should never be reached
  * 
  * cdef list get_pairs(int[15] val_count):             # <<<<<<<<<<<<<<
@@ -6954,19 +6152,19 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_pairs(int *__pyx_v_val_coun
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_pairs", 1);
 
-  /* "hand_rank_monte_carlo.pyx":279
+  /* "hand_rank_monte_carlo.pyx":221
  * cdef list get_pairs(int[15] val_count):
  *     """Helper function to get all pairs."""
  *     pairs = []             # <<<<<<<<<<<<<<
  *     for i in range(15):
  *         if val_count[i] == 2:
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_pairs = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":280
+  /* "hand_rank_monte_carlo.pyx":222
  *     """Helper function to get all pairs."""
  *     pairs = []
  *     for i in range(15):             # <<<<<<<<<<<<<<
@@ -6976,7 +6174,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_pairs(int *__pyx_v_val_coun
   for (__pyx_t_2 = 0; __pyx_t_2 < 15; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "hand_rank_monte_carlo.pyx":281
+    /* "hand_rank_monte_carlo.pyx":223
  *     pairs = []
  *     for i in range(15):
  *         if val_count[i] == 2:             # <<<<<<<<<<<<<<
@@ -6986,19 +6184,19 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_pairs(int *__pyx_v_val_coun
     __pyx_t_3 = ((__pyx_v_val_count[__pyx_v_i]) == 2);
     if (__pyx_t_3) {
 
-      /* "hand_rank_monte_carlo.pyx":282
+      /* "hand_rank_monte_carlo.pyx":224
  *     for i in range(15):
  *         if val_count[i] == 2:
  *             pairs.append(i)             # <<<<<<<<<<<<<<
  *     return pairs
  * 
  */
-      __pyx_t_1 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 282, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 224, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_4 = __Pyx_PyList_Append(__pyx_v_pairs, __pyx_t_1); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 282, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyList_Append(__pyx_v_pairs, __pyx_t_1); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 224, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "hand_rank_monte_carlo.pyx":281
+      /* "hand_rank_monte_carlo.pyx":223
  *     pairs = []
  *     for i in range(15):
  *         if val_count[i] == 2:             # <<<<<<<<<<<<<<
@@ -7008,7 +6206,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_pairs(int *__pyx_v_val_coun
     }
   }
 
-  /* "hand_rank_monte_carlo.pyx":283
+  /* "hand_rank_monte_carlo.pyx":225
  *         if val_count[i] == 2:
  *             pairs.append(i)
  *     return pairs             # <<<<<<<<<<<<<<
@@ -7020,7 +6218,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_pairs(int *__pyx_v_val_coun
   __pyx_r = __pyx_v_pairs;
   goto __pyx_L0;
 
-  /* "hand_rank_monte_carlo.pyx":277
+  /* "hand_rank_monte_carlo.pyx":219
  *     return -1  # Should never be reached
  * 
  * cdef list get_pairs(int[15] val_count):             # <<<<<<<<<<<<<<
@@ -7040,7 +6238,7 @@ static PyObject *__pyx_f_21hand_rank_monte_carlo_get_pairs(int *__pyx_v_val_coun
   return __pyx_r;
 }
 
-/* "hand_rank_monte_carlo.pyx":285
+/* "hand_rank_monte_carlo.pyx":227
  *     return pairs
  * 
  * cdef int count_pairs(int[15] val_count):             # <<<<<<<<<<<<<<
@@ -7062,7 +6260,7 @@ static int __pyx_f_21hand_rank_monte_carlo_count_pairs(int *__pyx_v_val_count) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("count_pairs", 1);
 
-  /* "hand_rank_monte_carlo.pyx":287
+  /* "hand_rank_monte_carlo.pyx":229
  * cdef int count_pairs(int[15] val_count):
  *     """Helper function to count the number of pairs."""
  *     count = 0             # <<<<<<<<<<<<<<
@@ -7072,7 +6270,7 @@ static int __pyx_f_21hand_rank_monte_carlo_count_pairs(int *__pyx_v_val_count) {
   __Pyx_INCREF(__pyx_int_0);
   __pyx_v_count = __pyx_int_0;
 
-  /* "hand_rank_monte_carlo.pyx":288
+  /* "hand_rank_monte_carlo.pyx":230
  *     """Helper function to count the number of pairs."""
  *     count = 0
  *     for i in range(15):             # <<<<<<<<<<<<<<
@@ -7082,7 +6280,7 @@ static int __pyx_f_21hand_rank_monte_carlo_count_pairs(int *__pyx_v_val_count) {
   for (__pyx_t_1 = 0; __pyx_t_1 < 15; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "hand_rank_monte_carlo.pyx":289
+    /* "hand_rank_monte_carlo.pyx":231
  *     count = 0
  *     for i in range(15):
  *         if val_count[i] == 2:             # <<<<<<<<<<<<<<
@@ -7092,18 +6290,18 @@ static int __pyx_f_21hand_rank_monte_carlo_count_pairs(int *__pyx_v_val_count) {
     __pyx_t_2 = ((__pyx_v_val_count[__pyx_v_i]) == 2);
     if (__pyx_t_2) {
 
-      /* "hand_rank_monte_carlo.pyx":290
+      /* "hand_rank_monte_carlo.pyx":232
  *     for i in range(15):
  *         if val_count[i] == 2:
  *             count += 1             # <<<<<<<<<<<<<<
  *     return count
  */
-      __pyx_t_3 = __Pyx_PyInt_AddObjC(__pyx_v_count, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 290, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyInt_AddObjC(__pyx_v_count, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 232, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF_SET(__pyx_v_count, __pyx_t_3);
       __pyx_t_3 = 0;
 
-      /* "hand_rank_monte_carlo.pyx":289
+      /* "hand_rank_monte_carlo.pyx":231
  *     count = 0
  *     for i in range(15):
  *         if val_count[i] == 2:             # <<<<<<<<<<<<<<
@@ -7113,16 +6311,16 @@ static int __pyx_f_21hand_rank_monte_carlo_count_pairs(int *__pyx_v_val_count) {
     }
   }
 
-  /* "hand_rank_monte_carlo.pyx":291
+  /* "hand_rank_monte_carlo.pyx":233
  *         if val_count[i] == 2:
  *             count += 1
  *     return count             # <<<<<<<<<<<<<<
  */
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_count); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 291, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_count); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 233, __pyx_L1_error)
   __pyx_r = __pyx_t_4;
   goto __pyx_L0;
 
-  /* "hand_rank_monte_carlo.pyx":285
+  /* "hand_rank_monte_carlo.pyx":227
  *     return pairs
  * 
  * cdef int count_pairs(int[15] val_count):             # <<<<<<<<<<<<<<
@@ -7174,6 +6372,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_u__3, __pyx_k__3, sizeof(__pyx_k__3), 0, 1, 0, 0},
     {&__pyx_n_s_asyncio_coroutines, __pyx_k_asyncio_coroutines, sizeof(__pyx_k_asyncio_coroutines), 0, 0, 1, 1},
     {&__pyx_n_b_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 0, 1},
+    {&__pyx_n_s_chr, __pyx_k_chr, sizeof(__pyx_k_chr), 0, 0, 1, 1},
     {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
     {&__pyx_n_s_combinations, __pyx_k_combinations, sizeof(__pyx_k_combinations), 0, 0, 1, 1},
     {&__pyx_n_s_community_cards, __pyx_k_community_cards, sizeof(__pyx_k_community_cards), 0, 0, 1, 1},
@@ -7209,8 +6408,9 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 46, __pyx_L1_error)
-  __pyx_builtin_max = __Pyx_GetBuiltinName(__pyx_n_s_max); if (!__pyx_builtin_max) __PYX_ERR(0, 104, __pyx_L1_error)
-  __pyx_builtin_sorted = __Pyx_GetBuiltinName(__pyx_n_s_sorted); if (!__pyx_builtin_sorted) __PYX_ERR(0, 116, __pyx_L1_error)
+  __pyx_builtin_chr = __Pyx_GetBuiltinName(__pyx_n_s_chr); if (!__pyx_builtin_chr) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_builtin_max = __Pyx_GetBuiltinName(__pyx_n_s_max); if (!__pyx_builtin_max) __PYX_ERR(0, 171, __pyx_L1_error)
+  __pyx_builtin_sorted = __Pyx_GetBuiltinName(__pyx_n_s_sorted); if (!__pyx_builtin_sorted) __PYX_ERR(0, 183, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -7243,23 +6443,23 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "hand_rank_monte_carlo.pyx":13
+  /* "hand_rank_monte_carlo.pyx":12
  * cdef char RANKS[13]
  * 
  * def initialize_constants():             # <<<<<<<<<<<<<<
  *     global SUITS, RANKS
  *     SUITS[0] = b'h'[0]
  */
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_initialize_constants, 13, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_initialize_constants, 12, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 12, __pyx_L1_error)
 
-  /* "hand_rank_monte_carlo.pyx":33
+  /* "hand_rank_monte_carlo.pyx":32
  *     RANKS[12] = b'A'[0]
  * 
  * def setup_module():             # <<<<<<<<<<<<<<
  *     initialize_constants()
- * 
+ *     srand(time(NULL))  # Seed the RNG once
  */
-  __pyx_codeobj__5 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_setup_module, 33, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__5)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_codeobj__5 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_setup_module, 32, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__5)) __PYX_ERR(0, 32, __pyx_L1_error)
 
   /* "hand_rank_monte_carlo.pyx":37
  * 
@@ -7273,18 +6473,18 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__6);
   __pyx_codeobj__7 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_get_best_hand, 37, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__7)) __PYX_ERR(0, 37, __pyx_L1_error)
 
-  /* "hand_rank_monte_carlo.pyx":131
+  /* "hand_rank_monte_carlo.pyx":73
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):             # <<<<<<<<<<<<<<
  *     setup_module()
- *     srand(time(NULL))
+ *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
  */
-  __pyx_tuple__8 = PyTuple_Pack(3, __pyx_n_s_player_hand, __pyx_n_s_community_cards, __pyx_n_s_num_simulations); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_tuple__8 = PyTuple_Pack(3, __pyx_n_s_player_hand, __pyx_n_s_community_cards, __pyx_n_s_num_simulations); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
-  __pyx_codeobj__9 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__8, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_monte_carlo_simulation, 131, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__9)) __PYX_ERR(0, 131, __pyx_L1_error)
-  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_int_1000); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_codeobj__9 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__8, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_hand_rank_monte_carlo_pyx, __pyx_n_s_monte_carlo_simulation, 73, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__9)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_int_1000); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
   __Pyx_RefNannyFinishContext();
@@ -7670,49 +6870,49 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "hand_rank_monte_carlo.pyx":7
+  /* "hand_rank_monte_carlo.pyx":6
  * from libc.time cimport time
  * from libc.stdio cimport printf
  * from itertools import combinations             # <<<<<<<<<<<<<<
  * import cython
  * 
  */
-  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 6, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_n_s_combinations);
   __Pyx_GIVEREF(__pyx_n_s_combinations);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_combinations)) __PYX_ERR(0, 7, __pyx_L1_error);
-  __pyx_t_3 = __Pyx_Import(__pyx_n_s_itertools, __pyx_t_2, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 7, __pyx_L1_error)
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_combinations)) __PYX_ERR(0, 6, __pyx_L1_error);
+  __pyx_t_3 = __Pyx_Import(__pyx_n_s_itertools, __pyx_t_2, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 6, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_3, __pyx_n_s_combinations); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_3, __pyx_n_s_combinations); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 6, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_combinations, __pyx_t_2) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_combinations, __pyx_t_2) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":13
+  /* "hand_rank_monte_carlo.pyx":12
  * cdef char RANKS[13]
  * 
  * def initialize_constants():             # <<<<<<<<<<<<<<
  *     global SUITS, RANKS
  *     SUITS[0] = b'h'[0]
  */
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_21hand_rank_monte_carlo_1initialize_constants, 0, __pyx_n_s_initialize_constants, NULL, __pyx_n_s_hand_rank_monte_carlo, __pyx_d, ((PyObject *)__pyx_codeobj__4)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_21hand_rank_monte_carlo_1initialize_constants, 0, __pyx_n_s_initialize_constants, NULL, __pyx_n_s_hand_rank_monte_carlo, __pyx_d, ((PyObject *)__pyx_codeobj__4)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_initialize_constants, __pyx_t_3) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_initialize_constants, __pyx_t_3) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":33
+  /* "hand_rank_monte_carlo.pyx":32
  *     RANKS[12] = b'A'[0]
  * 
  * def setup_module():             # <<<<<<<<<<<<<<
  *     initialize_constants()
- * 
+ *     srand(time(NULL))  # Seed the RNG once
  */
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_21hand_rank_monte_carlo_3setup_module, 0, __pyx_n_s_setup_module, NULL, __pyx_n_s_hand_rank_monte_carlo, __pyx_d, ((PyObject *)__pyx_codeobj__5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_21hand_rank_monte_carlo_3setup_module, 0, __pyx_n_s_setup_module, NULL, __pyx_n_s_hand_rank_monte_carlo, __pyx_d, ((PyObject *)__pyx_codeobj__5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 32, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_setup_module, __pyx_t_3) < 0) __PYX_ERR(0, 33, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_setup_module, __pyx_t_3) < 0) __PYX_ERR(0, 32, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "hand_rank_monte_carlo.pyx":37
@@ -7727,23 +6927,23 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_best_hand, __pyx_t_3) < 0) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hand_rank_monte_carlo.pyx":131
+  /* "hand_rank_monte_carlo.pyx":73
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):             # <<<<<<<<<<<<<<
  *     setup_module()
- *     srand(time(NULL))
+ *     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
  */
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_21hand_rank_monte_carlo_7monte_carlo_simulation, 0, __pyx_n_s_monte_carlo_simulation, NULL, __pyx_n_s_hand_rank_monte_carlo, __pyx_d, ((PyObject *)__pyx_codeobj__9)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_21hand_rank_monte_carlo_7monte_carlo_simulation, 0, __pyx_n_s_monte_carlo_simulation, NULL, __pyx_n_s_hand_rank_monte_carlo, __pyx_d, ((PyObject *)__pyx_codeobj__9)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_3, __pyx_tuple__10);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_monte_carlo_simulation, __pyx_t_3) < 0) __PYX_ERR(0, 131, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_monte_carlo_simulation, __pyx_t_3) < 0) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "hand_rank_monte_carlo.pyx":1
  * #cython: language_level=3             # <<<<<<<<<<<<<<
- * 
  * from libc.stdlib cimport malloc, free, srand, rand, atoi
+ * from libc.string cimport memcpy, strcpy
  */
   __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
@@ -8855,12 +8055,6 @@ static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *nam
     return 0;
 }
 
-/* PyObjectCallOneArg */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *args[2] = {NULL, arg};
-    return __Pyx_PyObject_FastCall(func, args+1, 1 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
-}
-
 /* ModInt[long] */
 static CYTHON_INLINE long __Pyx_mod_long(long a, long b) {
     long r = a % b;
@@ -8875,6 +8069,76 @@ static CYTHON_INLINE long __Pyx_div_long(long a, long b) {
     q -= ((r != 0) & ((r ^ b) < 0));
     return q;
 }
+
+/* PyObjectCallOneArg */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *args[2] = {NULL, arg};
+    return __Pyx_PyObject_FastCall(func, args+1, 1 | __Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET);
+}
+
+/* UnicodeConcatInPlace */
+# if CYTHON_COMPILING_IN_CPYTHON && PY_MAJOR_VERSION >= 3
+static int
+__Pyx_unicode_modifiable(PyObject *unicode)
+{
+    if (Py_REFCNT(unicode) != 1)
+        return 0;
+    if (!PyUnicode_CheckExact(unicode))
+        return 0;
+    if (PyUnicode_CHECK_INTERNED(unicode))
+        return 0;
+    return 1;
+}
+static CYTHON_INLINE PyObject *__Pyx_PyUnicode_ConcatInPlaceImpl(PyObject **p_left, PyObject *right
+        #if CYTHON_REFNANNY
+        , void* __pyx_refnanny
+        #endif
+    ) {
+    PyObject *left = *p_left;
+    Py_ssize_t left_len, right_len, new_len;
+    if (unlikely(__Pyx_PyUnicode_READY(left) == -1))
+        return NULL;
+    if (unlikely(__Pyx_PyUnicode_READY(right) == -1))
+        return NULL;
+    left_len = PyUnicode_GET_LENGTH(left);
+    if (left_len == 0) {
+        Py_INCREF(right);
+        return right;
+    }
+    right_len = PyUnicode_GET_LENGTH(right);
+    if (right_len == 0) {
+        Py_INCREF(left);
+        return left;
+    }
+    if (unlikely(left_len > PY_SSIZE_T_MAX - right_len)) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "strings are too large to concat");
+        return NULL;
+    }
+    new_len = left_len + right_len;
+    if (__Pyx_unicode_modifiable(left)
+            && PyUnicode_CheckExact(right)
+            && PyUnicode_KIND(right) <= PyUnicode_KIND(left)
+            && !(PyUnicode_IS_ASCII(left) && !PyUnicode_IS_ASCII(right))) {
+        int ret;
+        __Pyx_GIVEREF(*p_left);
+        ret = PyUnicode_Resize(p_left, new_len);
+        __Pyx_GOTREF(*p_left);
+        if (unlikely(ret != 0))
+            return NULL;
+        #if PY_VERSION_HEX >= 0x030d0000
+        if (unlikely(PyUnicode_CopyCharacters(*p_left, left_len, right, 0, right_len) < 0)) return NULL;
+        #else
+        _PyUnicode_FastCopyCharacters(*p_left, left_len, right, 0, right_len);
+        #endif
+        __Pyx_INCREF(*p_left);
+        __Pyx_GIVEREF(*p_left);
+        return *p_left;
+    } else {
+        return __Pyx_PyUnicode_Concat(left, right);
+    }
+  }
+#endif
 
 /* UnpackUnboundCMethod */
 static PyObject *__Pyx_SelflessCall(PyObject *method, PyObject *args, PyObject *kwargs) {
@@ -11573,70 +10837,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
     }
 }
 
-/* CIntToPy */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_From_char(char value) {
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-    const char neg_one = (char) -1, const_zero = (char) 0;
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic pop
-#endif
-    const int is_unsigned = neg_one > const_zero;
-    if (is_unsigned) {
-        if (sizeof(char) < sizeof(long)) {
-            return PyInt_FromLong((long) value);
-        } else if (sizeof(char) <= sizeof(unsigned long)) {
-            return PyLong_FromUnsignedLong((unsigned long) value);
-#ifdef HAVE_LONG_LONG
-        } else if (sizeof(char) <= sizeof(unsigned PY_LONG_LONG)) {
-            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
-#endif
-        }
-    } else {
-        if (sizeof(char) <= sizeof(long)) {
-            return PyInt_FromLong((long) value);
-#ifdef HAVE_LONG_LONG
-        } else if (sizeof(char) <= sizeof(PY_LONG_LONG)) {
-            return PyLong_FromLongLong((PY_LONG_LONG) value);
-#endif
-        }
-    }
-    {
-        int one = 1; int little = (int)*(unsigned char *)&one;
-        unsigned char *bytes = (unsigned char *)&value;
-#if !CYTHON_COMPILING_IN_LIMITED_API && PY_VERSION_HEX < 0x030d0000
-        return _PyLong_FromByteArray(bytes, sizeof(char),
-                                     little, !is_unsigned);
-#else
-        PyObject *from_bytes, *result = NULL;
-        PyObject *py_bytes = NULL, *arg_tuple = NULL, *kwds = NULL, *order_str = NULL;
-        from_bytes = PyObject_GetAttrString((PyObject*)&PyLong_Type, "from_bytes");
-        if (!from_bytes) return NULL;
-        py_bytes = PyBytes_FromStringAndSize((char*)bytes, sizeof(char));
-        if (!py_bytes) goto limited_bad;
-        order_str = PyUnicode_FromString(little ? "little" : "big");
-        if (!order_str) goto limited_bad;
-        arg_tuple = PyTuple_Pack(2, py_bytes, order_str);
-        if (!arg_tuple) goto limited_bad;
-        if (!is_unsigned) {
-            kwds = PyDict_New();
-            if (!kwds) goto limited_bad;
-            if (PyDict_SetItemString(kwds, "signed", __Pyx_NewRef(Py_True))) goto limited_bad;
-        }
-        result = PyObject_Call(from_bytes, arg_tuple, kwds);
-        limited_bad:
-        Py_XDECREF(kwds);
-        Py_XDECREF(arg_tuple);
-        Py_XDECREF(order_str);
-        Py_XDECREF(py_bytes);
-        Py_XDECREF(from_bytes);
-        return result;
-#endif
-    }
-}
-
 /* CIntFromPy */
 static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
@@ -11908,6 +11108,70 @@ raise_neg_overflow:
     PyErr_SetString(PyExc_OverflowError,
         "can't convert negative value to long");
     return (long) -1;
+}
+
+/* CIntToPy */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_char(char value) {
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+    const char neg_one = (char) -1, const_zero = (char) 0;
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic pop
+#endif
+    const int is_unsigned = neg_one > const_zero;
+    if (is_unsigned) {
+        if (sizeof(char) < sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(char) <= sizeof(unsigned long)) {
+            return PyLong_FromUnsignedLong((unsigned long) value);
+#ifdef HAVE_LONG_LONG
+        } else if (sizeof(char) <= sizeof(unsigned PY_LONG_LONG)) {
+            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
+#endif
+        }
+    } else {
+        if (sizeof(char) <= sizeof(long)) {
+            return PyInt_FromLong((long) value);
+#ifdef HAVE_LONG_LONG
+        } else if (sizeof(char) <= sizeof(PY_LONG_LONG)) {
+            return PyLong_FromLongLong((PY_LONG_LONG) value);
+#endif
+        }
+    }
+    {
+        int one = 1; int little = (int)*(unsigned char *)&one;
+        unsigned char *bytes = (unsigned char *)&value;
+#if !CYTHON_COMPILING_IN_LIMITED_API && PY_VERSION_HEX < 0x030d0000
+        return _PyLong_FromByteArray(bytes, sizeof(char),
+                                     little, !is_unsigned);
+#else
+        PyObject *from_bytes, *result = NULL;
+        PyObject *py_bytes = NULL, *arg_tuple = NULL, *kwds = NULL, *order_str = NULL;
+        from_bytes = PyObject_GetAttrString((PyObject*)&PyLong_Type, "from_bytes");
+        if (!from_bytes) return NULL;
+        py_bytes = PyBytes_FromStringAndSize((char*)bytes, sizeof(char));
+        if (!py_bytes) goto limited_bad;
+        order_str = PyUnicode_FromString(little ? "little" : "big");
+        if (!order_str) goto limited_bad;
+        arg_tuple = PyTuple_Pack(2, py_bytes, order_str);
+        if (!arg_tuple) goto limited_bad;
+        if (!is_unsigned) {
+            kwds = PyDict_New();
+            if (!kwds) goto limited_bad;
+            if (PyDict_SetItemString(kwds, "signed", __Pyx_NewRef(Py_True))) goto limited_bad;
+        }
+        result = PyObject_Call(from_bytes, arg_tuple, kwds);
+        limited_bad:
+        Py_XDECREF(kwds);
+        Py_XDECREF(arg_tuple);
+        Py_XDECREF(order_str);
+        Py_XDECREF(py_bytes);
+        Py_XDECREF(from_bytes);
+        return result;
+#endif
+    }
 }
 
 /* CIntFromPy */

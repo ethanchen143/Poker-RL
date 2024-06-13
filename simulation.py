@@ -17,9 +17,9 @@ def main():
     except:
         print('No starting Q-table.')
 
-    num_rounds = 1000
+    num_rounds = 3000000
 
-    # 3 Handed Training
+    # # 3 Handed Training
     players = [
         HonestBot(name="Honest_Hannah", chips=1000),
         QLearningBot(name="Bot_Ricky", chips=1000, shared_q_table=shared_q_table),
@@ -29,7 +29,10 @@ def main():
     # 3 Handed Testing
     # players = [
     #     HonestBot(name="Honest_Hannah", chips=1000),
-    #     RandomBot(name="Random_Ricky", chips=1000),
+    #     HonestBot(name="Honest_Henry", chips=1000),
+    #     # RandomBot(name="Random_Ricky", chips=1000),
+    #     # QLearningBot(name="Bot_Randy", chips=1000, shared_q_table=shared_q_table,
+    #     #              initial_exploration_rate=0, final_exploration_rate=0, initial_learning_rate=0.2, final_learning_rate=0.2),
     #     QLearningBot(name="Bot_Bob", chips=1000, shared_q_table=shared_q_table,
     #                  initial_exploration_rate=0, final_exploration_rate=0, initial_learning_rate=0.2, final_learning_rate=0.2),
     # ]

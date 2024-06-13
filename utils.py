@@ -116,11 +116,11 @@ def evaluate_hand_strength(game,player,num_sim):
 
 # Test
 def test_monte_carlo():
-    hand = [Card('h','5'), Card('c','5')]
-    community_cards = [Card('s', '5'), Card('h', 'K'), Card('d', '8')]
+    hand = [Card('h','2'), Card('d','2')]
+    community_cards = [Card('s', '9'), Card('s', '2'), Card('d', '8')]
     print(f"Hand: {hand}, Community Cards: {community_cards}")
     start_time = time.time()
-    strength = monte_carlo_simulation([card_to_tuple(card) for card in hand], [card_to_tuple(card) for card in community_cards], num_simulations = 1000)
+    strength = monte_carlo_simulation([card_to_tuple(card) for card in hand], [card_to_tuple(card) for card in community_cards], num_simulations = 100)
     print(f"Estimated Strength: {strength:.2f} (win rate)")
     elapsed_time = time.time() - start_time
     print(f"Time Taken: {elapsed_time:.2f} seconds")

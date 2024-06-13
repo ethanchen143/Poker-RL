@@ -49,14 +49,14 @@ class HonestBot(Player):
         rand = random.random()
         hand_strength = evaluate_hand_strength(game,self,100) #get rough evaluation
         
+        game.log_message(f'hand_strength: {hand_strength}')        
+        game.log_message(f'legal_actions: {legal_actions}')
         
-        game.log_message(str(hand_strength))        
-        game.log_message(str(legal_actions))
         if 'check' in legal_actions and hand_strength < 10:
             return 'check' #check 50% of the hands
         
         if game.stage == 'Pre-Flop' and hand_strength < 10:
-            return 'fold' #check 50% of the hands
+            return 'fold' #fold 50% of the hands preflop
         
         if game.actions.count('raise') == 1:
             if hand_strength <= 10:

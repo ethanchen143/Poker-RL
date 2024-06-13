@@ -31,10 +31,10 @@ class RandomBot(Player):
         if self.chips > game.current_bet:
             if game.community_cards:
                 # Post-Flop
-                pot_fraction_raises = ['raise_33', 'raise_66', 'raise_100', 'raise_150']
+                pot_fraction_raises = ['raise_50', 'raise_100']
             else:
                 # Pre-Flop
-                pot_fraction_raises = ['raise_100', 'raise_150']
+                pot_fraction_raises = ['raise_100']
 
             # Calculate the actual raise amounts and filter out invalid ones
             valid_raises = [

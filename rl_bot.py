@@ -8,6 +8,7 @@ class QLearningBot(Player):
         super().__init__(name, chips)
         self.initial_chips = chips
         self.q_table = shared_q_table  # State-action value table
+        
         self.gamma = discount_factor
         self.initial_alpha = initial_learning_rate
         self.final_alpha = final_learning_rate
@@ -25,7 +26,7 @@ class QLearningBot(Player):
             if pair[0][0] == game.stage:
                 hand_strength = pair[0][2]
         if hand_strength == 0:
-            hand_strength = evaluate_hand_strength(game,self,1000)
+            hand_strength = evaluate_hand_strength(game,self,100)
         past_actions = game.actions
         return (
             game.stage,
@@ -40,9 +41,9 @@ class QLearningBot(Player):
             return random.choice(legal_actions)  # Explore
         else:
             q_values = [self.q_table.get((state, action), 0) for action in legal_actions]
-            game.log_message(str(state[2]))
-            game.log_message(str(legal_actions))
-            game.log_message(str(q_values))
+            game.log_message(f'hand_strength: {state[2]}')
+            game.log_message(f'legal_actions: {legal_actions}')
+            game.log_message(f'q_values:{q_values}')
             max_q = max(q_values)
             return legal_actions[q_values.index(max_q)]  # Exploit
     

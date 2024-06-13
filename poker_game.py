@@ -248,7 +248,7 @@ class PokerGame:
         for i in range(num_rounds):
             self.log_message(f"\n--- Round {i + 1} ---")
             self.play_round()
-            if (i+1) % 10000 == 0:
+            if (i+1) % 100 == 0:
                 for player in self.players:
                     if isinstance(player, QLearningBot):
                         player.adjust_learning_rate(i + 1, num_rounds)

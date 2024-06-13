@@ -35,9 +35,6 @@ def setup_module():
 
 
 cpdef tuple get_best_hand(list player_hand, list community_cards):
-    """
-    Function to evaluate the best hand for a player given their hand and community cards.
-    """
     cdef char combined_cards[7][2]
     cdef char best_hand[5][2]
     cdef int i, j
@@ -68,29 +65,36 @@ cpdef tuple get_best_hand(list player_hand, list community_cards):
 
     return best_rank
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
+
+# Cython code with debugging print statements
 cpdef double monte_carlo_simulation(list player_hand, list community_cards, int num_simulations=1000):
     setup_module()
     cdef int i, j, wins = 0, total_community_cards = len(community_cards)
     cdef int found, k
     cdef char deck[52][2], shuffled_deck[52][2]
-    cdef char cards[7][2]
+    cdef char our_hand[2][2]
     cdef char opponent_hand[2][2]
-    cdef char remaining_community_cards[5][2]
+    cdef char board[5][2]
     cdef int num_cards = 0
+
+    cdef char combined_cards_us[7][2]
+    cdef char combined_cards_opps[7][2]
+    cdef char current_hand[5][2]
 
     # Initialize deck
     for i in range(52):
         deck[i][0] = SUITS[i % 4]
         deck[i][1] = RANKS[i // 4]
 
-    # Parse player and community cards into C arrays
-    for card in player_hand + community_cards:
-        if num_cards < 7:
-            cards[num_cards][0] = card[0].encode('utf-8')[0]
-            cards[num_cards][1] = card[1].encode('utf-8')[0]
-            num_cards += 1
+    # Parse player cards into C array
+    for i in range(2):
+        our_hand[i][0] = player_hand[i][0].encode('utf-8')[0]
+        our_hand[i][1] = player_hand[i][1].encode('utf-8')[0]
+
+    # Parse community cards into C array
+    for i in range(total_community_cards):
+        board[i][0] = community_cards[i][0].encode('utf-8')[0]
+        board[i][1] = community_cards[i][1].encode('utf-8')[0]
 
     # Simulation loop
     for sim_index in range(num_simulations):
@@ -102,10 +106,15 @@ cpdef double monte_carlo_simulation(list player_hand, list community_cards, int 
 
         # Deal cards not in use
         k = 0
+        num_cards = total_community_cards  # Track filled community cards
         for i in range(52):
             found = 0
+            for j in range(2):
+                if shuffled_deck[i][0] == our_hand[j][0] and shuffled_deck[i][1] == our_hand[j][1]:
+                    found = 1
+                    break      
             for j in range(num_cards):
-                if shuffled_deck[i][0] == cards[j][0] and shuffled_deck[i][1] == cards[j][1]:
+                if shuffled_deck[i][0] == board[j][0] and shuffled_deck[i][1] == board[j][1]:
                     found = 1
                     break
             if not found:
@@ -113,27 +122,67 @@ cpdef double monte_carlo_simulation(list player_hand, list community_cards, int 
                     opponent_hand[k][0] = shuffled_deck[i][0]
                     opponent_hand[k][1] = shuffled_deck[i][1]
                     k += 1
-                elif k < (5 - total_community_cards):
-                    remaining_community_cards[k][0] = shuffled_deck[i][0]
-                    remaining_community_cards[k][1] = shuffled_deck[i][1]
+                elif k < (7 - total_community_cards):
+                    board[num_cards][0] = shuffled_deck[i][0]
+                    board[num_cards][1] = shuffled_deck[i][1]
+                    num_cards += 1
                     k += 1
-                if k == (5 - total_community_cards):
+                if k == (7 - total_community_cards):
                     break
 
-        # Convert opponent_hand and remaining_community_cards to Python lists
-        py_opponent_hand = [f"{chr(opponent_hand[x][0])}{chr(opponent_hand[x][1])}" for x in range(2)]
-        py_remaining_community = [f"{chr(remaining_community_cards[x][0])}{chr(remaining_community_cards[x][1])}" for x in range(5 - total_community_cards)]
+        # Initialize the combined cards array
+        for i in range(2):
+            combined_cards_us[i][0] = our_hand[i][0]
+            combined_cards_us[i][1] = our_hand[i][1]
+            combined_cards_opps[i][0] = opponent_hand[i][0]
+            combined_cards_opps[i][1] = opponent_hand[i][1]
+        for i in range(5):
+            combined_cards_us[i+2][0] = board[i][0]
+            combined_cards_us[i+2][1] = board[i][1]
+            combined_cards_opps[i+2][0] = board[i][0]
+            combined_cards_opps[i+2][1] = board[i][1]
 
-        # Combine provided community cards and drawn community cards
-        combined_community = community_cards + py_remaining_community
+        # Initialize best rank and best hand
+        best_rank_us = (-1,())
+        best_rank_opps = (-1,())
 
-        player_best_hand = get_best_hand(player_hand, combined_community)
-        opponent_best_hand = get_best_hand(py_opponent_hand, combined_community)
+        # Evaluate the best hand for us
+        for combination in combinations(range(7), 5):
+            for j in range(5):
+                current_hand[j][0] = combined_cards_us[combination[j]][0]
+                current_hand[j][1] = combined_cards_us[combination[j]][1]
+            current_rank = single_hand_rank(current_hand)
+            if current_rank > best_rank_us:
+                best_rank_us = current_rank
 
-        if player_best_hand > opponent_best_hand:
+        # Evaluate the best hand for opponent
+        for combination in combinations(range(7), 5):
+            for j in range(5):
+                current_hand[j][0] = combined_cards_opps[combination[j]][0]
+                current_hand[j][1] = combined_cards_opps[combination[j]][1]
+            current_rank = single_hand_rank(current_hand)
+            if current_rank > best_rank_opps:
+                best_rank_opps = current_rank
+
+        # Debug: Print hands and ranks
+        # print("Player's best hand:", best_rank_us)
+        # print("Opp's best hand:", best_rank_opps)
+        
+        if best_rank_us >= best_rank_opps:
             wins += 1
 
     return wins / float(num_simulations)
+
+
+cdef void sort_array(int arr[], int n):
+    cdef int i, j, tmp
+    for i in range(n - 1):
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                tmp = arr[j]
+                arr[j] = arr[j + 1]
+                arr[j + 1] = tmp
+
 
 cdef tuple single_hand_rank(char hand[5][2]):
     cdef int values[5]
@@ -155,13 +204,17 @@ cdef tuple single_hand_rank(char hand[5][2]):
     flush = (suits[0] == suits[1] == suits[2] == suits[3] == suits[4])
 
     # Check for straight
-    values.sort()
+    sort_array(values, 5)
     straight = (values[0] + 1 == values[1] and values[1] + 1 == values[2] and
                 values[2] + 1 == values[3] and values[3] + 1 == values[4])
 
-    # Ace can also be low in a straight (Ace, 2, 3, 4, 5)
-    if not straight and values[4] == 14:  # Checking if Ace is high
-        straight = (values[0] == 2 and values[1] == 3 and values[2] == 4 and values[3] == 5)
+    # Ace can also be high in a straight (10, J, Q, K, Ace)
+    if not straight:
+        if values == [10, 11, 12, 13, 14]:  # Check for Ace-high straight
+            straight = 1
+        elif values == [2, 3, 4, 5, 14]:  # Check for Ace-low straight
+            straight = 1
+            values = [1, 2, 3, 4, 5]  # Treat Ace as low for ranking purposes
 
     # Determine hand rank
     if straight and flush:
@@ -192,6 +245,7 @@ cdef tuple single_hand_rank(char hand[5][2]):
         return (1, (pair,) + tuple(kicker))  # One pair
     else:
         return (0, tuple(values))  # High card
+
         
 cdef int card_value(char rank):
     """Convert card rank characters to numerical values for sorting and comparison."""
